@@ -1,0 +1,78 @@
+[
+  {
+    "name": "sp_create_booking",
+    "params": "IN p_actor INT,IN p_hall INT,IN p_course INT,IN p_date DATE,IN p_start TIME,IN p_end TIME,IN p_purpose TEXT,IN p_type VARCHAR(20),IN p_attendance DECIMAL(20,6),IN p_groups JSON,OUT p_booking_id INT"
+  },
+  {
+    "name": "sp_update_pending_booking",
+    "params": "IN p_actor INT,IN p_booking INT,IN p_hall INT,IN p_course INT,IN p_date DATE,IN p_start TIME,IN p_end TIME,IN p_purpose TEXT,IN p_type VARCHAR(20),IN p_attendance DECIMAL(20,6),IN p_groups JSON"
+  },
+  {
+    "name": "sp_review_booking",
+    "params": "IN p_actor INT,IN p_booking INT,IN p_decision VARCHAR(10),IN p_note TEXT"
+  },
+  {
+    "name": "sp_cancel_booking",
+    "params": "IN p_actor INT,IN p_booking INT"
+  },
+  {
+    "name": "sp_complete_booking",
+    "params": "IN p_actor INT,IN p_booking INT"
+  },
+  {
+    "name": "sp_create_hall_block",
+    "params": "IN p_actor INT,IN p_hall INT,IN p_start DATETIME,IN p_end DATETIME,IN p_reason TEXT,OUT p_block_id INT"
+  },
+  {
+    "name": "sp_cancel_hall_block",
+    "params": "IN p_actor INT,IN p_block INT"
+  },
+  {
+    "name": "sp_update_hall",
+    "params": "IN p_actor INT,IN p_hall INT,IN p_capacity INT,IN p_status VARCHAR(10)"
+  },
+  {
+    "name": "sp_set_hall_facility",
+    "params": "IN p_actor INT,IN p_hall INT,IN p_facility INT,IN p_quantity INT,IN p_working INT"
+  },
+  {
+    "name": "sp_register_student",
+    "params": "IN p_department INT,IN p_name TEXT,IN p_email TEXT,IN p_username TEXT,IN p_password_hash TEXT,OUT p_account_id INT"
+  },
+  {
+    "name": "sp_provision_account",
+    "params": "IN p_actor INT,IN p_department INT,IN p_name TEXT,IN p_email TEXT,IN p_username TEXT,IN p_password_hash TEXT,IN p_role VARCHAR(20),OUT p_account_id INT"
+  },
+  {
+    "name": "sp_get_login_record",
+    "params": "IN p_username VARCHAR(50)"
+  },
+  {
+    "name": "sp_find_available_halls",
+    "params": "IN p_date DATE,IN p_start TIME,IN p_end TIME,IN p_attendance DECIMAL(20,6)"
+  },
+  {
+    "name": "sp_add_department",
+    "params": "IN p_actor INT,IN p_name VARCHAR(100),OUT p_id INT"
+  },
+  {
+    "name": "sp_add_building",
+    "params": "IN p_actor INT,IN p_code VARCHAR(20),IN p_name VARCHAR(100),IN p_location VARCHAR(255),OUT p_id INT"
+  },
+  {
+    "name": "sp_add_facility",
+    "params": "IN p_actor INT,IN p_name VARCHAR(100),IN p_description VARCHAR(255),OUT p_id INT"
+  },
+  {
+    "name": "sp_add_course",
+    "params": "IN p_actor INT,IN p_department INT,IN p_code VARCHAR(20),IN p_title VARCHAR(150),OUT p_id INT"
+  },
+  {
+    "name": "sp_add_student_group",
+    "params": "IN p_actor INT,IN p_department INT,IN p_name VARCHAR(100),IN p_intake SMALLINT UNSIGNED,IN p_year TINYINT UNSIGNED,OUT p_id INT"
+  },
+  {
+    "name": "sp_add_hall",
+    "params": "IN p_actor INT,IN p_building INT,IN p_number VARCHAR(20),IN p_floor VARCHAR(10),IN p_capacity INT,OUT p_id INT"
+  }
+]

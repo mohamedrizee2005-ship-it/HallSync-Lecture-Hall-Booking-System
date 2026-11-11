@@ -51,9 +51,15 @@ jobs:
           import base64
           from pathlib import Path
           for label,name in [('GUIDE_PDF','HallSync_Complete_Database_Guide.pdf'),('GUIDE_MD','Database_Guide.md'),('VALIDATION','database_validation.json')]:
-              print(label+'_BEGIN')
-              print(base64.b64encode((Path('docs')/name).read_bytes()).decode('ascii'))
-              print(label+'_END')
+              print('ARTIFACT_'+label+'_BEGIN')
+              encoded=base64.b64encode((Path('docs')/name).read_bytes()).decode('ascii')
+              for start in range(0,len(encoded),2048): print('ARTIFACT_'+label+'_CHUNK '+encoded[start:start+2048])
+              print('ARTIFACT_'+label+'_END')
+          for label,name in [('SEED','07_demo_data.sql'),('CONTINUE_SQL','complete_existing_database.sql'),('FRESH_SQL','fresh_install.sql')]:
+              print('ARTIFACT_'+label+'_BEGIN')
+              encoded=base64.b64encode((Path('database')/name).read_bytes()).decode('ascii')
+              for start in range(0,len(encoded),2048): print('ARTIFACT_'+label+'_CHUNK '+encoded[start:start+2048])
+              print('ARTIFACT_'+label+'_END')
           PY
       - name: Upload guide and validation report
         uses: actions/upload-artifact@v4
@@ -63,3 +69,6 @@ jobs:
             docs/HallSync_Complete_Database_Guide.pdf
             docs/Database_Guide.md
             docs/database_validation.json
+            database/complete_existing_database.sql
+            database/fresh_install.sql
+            database/07_demo_data.sql
