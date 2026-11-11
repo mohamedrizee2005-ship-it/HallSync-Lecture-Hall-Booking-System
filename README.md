@@ -30,8 +30,7 @@ Pending requests do not reserve a slot. Only Pending bookings can be edited; mov
 
 Start with [the database instructions](database/README.md).
 
-- **Your existing one-table database:** run [complete_existing_database.sql](database/complete_existing_database.sql) once.
-- **New empty installation:** use [fresh_install.sql](database/fresh_install.sql) when the database name is unused.
+- **One complete SQL file:** run [HallSync_Full_Setup.sql](database/HallSync_Full_Setup.sql) once. It creates the database and department when missing, then completes the full setup while preserving existing department rows.
 - **Verify afterwards:** run [08_verify_database.sql](database/08_verify_database.sql).
 - **Learn the design:** read [the guide](docs/Database_Guide.md) or download [the PDF](docs/HallSync_Complete_Database_Guide.pdf).
 - **Check evidence:** [MySQL validation report](docs/database_validation.json).

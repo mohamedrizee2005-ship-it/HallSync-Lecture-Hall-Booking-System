@@ -13,3 +13,5 @@ The test report is written to `docs/database_validation.json`.
 The tests also assemble the combined installation scripts from their individual source files.
 
 End-user authentication is outside these SQL contract tests. The application must derive actor IDs from authenticated sessions.
+
+The full rule suite now installs **HallSync_Full_Setup.sql** for both the department-only upgrade and the new-database scenario.

@@ -92,7 +92,7 @@ def main():
             install(c,(ROOT/n).read_text(),db,role)
         created.append(db)
         query(c,"INSERT INTO DEPARTMENT(DepartmentName) VALUES('Industrial Management')")
-        install(c,(ROOT/'complete_existing_database.sql').read_text(),db,role);roles.append(role)
+        install(c,(ROOT/'HallSync_Full_Setup.sql').read_text(),db,role);roles.append(role)
         m=metadata(c,db)
         ok('Upgrade preserves existing department ID 1',scalar(c,"SELECT DepartmentName FROM DEPARTMENT WHERE DepartmentID=1")=='Industrial Management')
         ok('11 tables',scalar(c,"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE'",(db,))==11)
@@ -260,7 +260,7 @@ def main():
         api.close()
         # Fresh install follows the same canonical schema and procedures.
         fresh=db+'_fresh';fresh_role=role+'_fresh'
-        install(c,(ROOT/'fresh_install.sql').read_text(),fresh,fresh_role);created.append(fresh);roles.append(fresh_role)
+        install(c,(ROOT/'HallSync_Full_Setup.sql').read_text(),fresh,fresh_role);created.append(fresh);roles.append(fresh_role)
         ok('Fresh installation creates 11 tables',scalar(c,"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE'",(fresh,))==11)
         ok('Fresh installation creates 61 columns',len(metadata(c,fresh)['columns'])==61)
         query(c,'USE '+db)

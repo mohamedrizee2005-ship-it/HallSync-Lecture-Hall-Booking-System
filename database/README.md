@@ -3,16 +3,16 @@
 Database: `hallsync_db`. Target server: MySQL 8.0.46.
 The nine-entity ER model becomes 11 tables with 61 columns and 14 foreign keys.
 
-## Continue your current database
+## One full setup file
 
-You already completed steps 01-03 and have department 1, Industrial Management.
+Use **HallSync_Full_Setup.sql** for the complete setup from database creation through final verification. It supports a new database, an empty database, or the matching department-only database you already created.
 
 1. Download and extract this repository.
-2. In your existing Workbench connection, open **complete_existing_database.sql**.
+2. In your existing Workbench connection, open **HallSync_Full_Setup.sql**.
 3. Enable **Stop Script Execution On Errors**, clear any text selection, and execute the whole file once.
 4. Refresh SCHEMAS and review the final verification grid.
 
-This preserves the existing department and creates the remaining 10 tables, the workflow procedures, views, demo records and application role. It does not drop the database.
+This creates the database and department table when missing, preserves any existing department rows, and adds the remaining tables, workflow procedures, views, demo records and application role. It does not drop a database or table.
 
 If execution stops, keep the error and table list. DDL is not one rollbackable batch: do not blindly rerun or reset a partly completed installation.
 
@@ -31,10 +31,9 @@ If execution stops, keep the error and table list. DDL is not one rollbackable b
 
 Use `08_verify_database.sql` to recheck metadata and existing reservations without changing data.
 
-## Other starting conditions
+## Earlier lesson files
 
-`fresh_install.sql` is for a new installation where `hallsync_db` does not exist.
-Do not execute both installation profiles on the same existing database.
+The numbered scripts and the earlier `fresh_install.sql` / `complete_existing_database.sql` profiles remain as lesson and compatibility references. Workbench users can use just **HallSync_Full_Setup.sql**.
 
 The individual 04-10 scripts remain readable source files. They are already included in the combined continuation.
 `09_workflow_example.sql` is an optional changing-data demonstration, run once after setup.
