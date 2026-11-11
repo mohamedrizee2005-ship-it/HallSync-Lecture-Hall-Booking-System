@@ -98,7 +98,7 @@ Each strong entity becomes a table. Each 1:N relationship stores the parent iden
 | HALL_FACILITY | Hall-to-facility M:N assignment, with total and working quantities. |
 | BOOKING_GROUP | Booking-to-student-group M:N assignment. |
 
-Key legend: PRI = primary key, UNI = unique key, FK = foreign key. Required means NOT NULL.
+Key legend: PRI = primary key, UNI = unique key, FK = foreign key. Req. means NOT NULL.
 
 A report is a query over existing data, so the design has no stored REPORT entity. The four views provide report datasets. SQL tables describe stored facts; OOP classes will also describe behaviour and do not have to map one-to-one to tables.
 
@@ -109,7 +109,7 @@ Names are not substituted for identifiers. For example, a booking stores Request
 
 Department catalogue shared by accounts, courses and groups.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | DepartmentID | int | Yes | PRI | Department identifier. Auto-generated in DEPARTMENT; a parent reference elsewhere. MySQL generates this primary-key value; gaps are allowed. |
 | DepartmentName | varchar(100) | Yes | - | Required catalogue name. The CHECK rejects empty strings and ordinary-space-only names. Names are not a declared unique key. |
@@ -119,7 +119,7 @@ Department catalogue shared by accounts, courses and groups.
 
 Building codes and locations used to identify lecture halls.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | BuildingID | int | Yes | PRI | Building identifier; halls reference the building that contains them. MySQL generates this primary-key value; gaps are allowed. |
 | BuildingCode | varchar(20) | Yes | UNI | Stable unique code used for building lookup. |
@@ -131,7 +131,7 @@ Building codes and locations used to identify lecture halls.
 
 Equipment types, such as Projector. Quantities belong to hall assignments.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | FacilityID | int | Yes | PRI | Facility-type identifier. The same type can occur in several halls. MySQL generates this primary-key value; gaps are allowed. |
 | FacilityName | varchar(100) | Yes | UNI | Unique type name, such as Projector. |
@@ -142,7 +142,7 @@ Equipment types, such as Projector. Quantities belong to hall assignments.
 
 People, account activation, one effective role and password hashes.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | AccountID | int | Yes | PRI | Account identifier. Reused as requester, reviewer or block recorder through differently named FKs. MySQL generates this primary-key value; gaps are allowed. |
 | DepartmentID | int | No | FK | Department identifier. Auto-generated in DEPARTMENT; a parent reference elsewhere. |
@@ -160,7 +160,7 @@ PasswordHash stores no plaintext password. Hashing and password verification use
 
 Course catalogue and its owning department.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | CourseID | int | Yes | PRI | Course identifier. Optional in a booking overall; mandatory for Lecture and Tutorial. MySQL generates this primary-key value; gaps are allowed. |
 | DepartmentID | int | Yes | FK | Department identifier. Auto-generated in DEPARTMENT; a parent reference elsewhere. |
@@ -172,7 +172,7 @@ Course catalogue and its owning department.
 
 Teaching groups by department and intake, not individual enrolment.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | GroupID | int | Yes | PRI | Student-group identifier. MySQL generates this primary-key value; gaps are allowed. |
 | DepartmentID | int | Yes | FK | Department identifier. Auto-generated in DEPARTMENT; a parent reference elsewhere. |
@@ -185,7 +185,7 @@ Teaching groups by department and intake, not individual enrolment.
 
 Physical hall identity, capacity and operational status.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | HallID | int | Yes | PRI | Lecture-hall identifier. Every booking and hall block refers to one hall. MySQL generates this primary-key value; gaps are allowed. |
 | BuildingID | int | Yes | FK | Building identifier; halls reference the building that contains them. |
@@ -197,11 +197,25 @@ Physical hall identity, capacity and operational status.
 The hall has no permanent Booked flag. One hall can be reserved for one period and free for another. OperationalStatus describes the physical hall, while availability is calculated for the requested interval.
 
 
-## 11. Data dictionary: BOOKING
+## 11. Data dictionary: HALL_FACILITY
+
+Hall-to-facility M:N assignment, with total and working quantities.
+
+| Column | SQL type | Req. | Key | Meaning / reason |
+| --- | --- | --- | --- | --- |
+| HallID | int | Yes | PK part + FK | Lecture-hall identifier. Every booking and hall block refers to one hall. |
+| FacilityID | int | Yes | PK part + FK | Facility-type identifier. The same type can occur in several halls. |
+| Quantity | int | Yes | PK part + FK | Positive integer total of this facility type in this hall. |
+| WorkingQuantity | int | Yes | PK part + FK | Integer between zero and Quantity inclusive; zero working units is valid. |
+
+The two key columns are unique together. Either individual value can repeat in other rows. This represents an M:N relationship without a comma-separated list.
+
+
+## 12. Data dictionary: BOOKING
 
 One request, one responsible requester, one hall and at most one review decision.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | BookingID | int | Yes | PRI | Unique identifier for one request, including requests retained after cancellation or rejection. MySQL generates this primary-key value; gaps are allowed. |
 | RequesterID | int | Yes | FK | Responsible account. Supplied from the authenticated session; there is no separate booked-for lecturer. |
@@ -214,7 +228,7 @@ One request, one responsible requester, one hall and at most one review decision
 | BookingType | enum('Lecture', 'Tutorial', 'Exam', 'Event') | Yes | - | Lecture, Tutorial, Exam or Event. Academic types impose extra course/group requirements. |
 | ExpectedAttendance | int | Yes | - | Positive integer expected headcount. Individual student enrolments are outside v1. |
 | BookingStatus | enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Completed') | Yes | - | Current lifecycle state: Pending, Approved, Rejected, Cancelled or Completed. Default: Pending. |
-| RequestedAt | datetime | Yes | - | Local date/time when the request was recorded. Default is CURRENT_TIMESTAMP. Default: CURRENT_TIMESTAMP. |
+| RequestedAt | datetime | Yes | - | Local date/time when the request was recorded. Default: CURRENT_TIMESTAMP. |
 | ReviewerID | int | No | FK | Optional administrator reference; different from RequesterID when a review exists. |
 | Decision | enum('Approved', 'Rejected') | No | - | Approved or Rejected. Preserve an earlier approval after later cancellation. |
 | ReviewedAt | datetime | No | - | Optional local review timestamp; cannot be before RequestedAt. |
@@ -223,11 +237,11 @@ One request, one responsible requester, one hall and at most one review decision
 A review is stored in this row because the agreed workflow allows at most one review decision. The reviewer ID, decision and review time are populated together. ReviewNote remains optional. The groups are separate BOOKING_GROUP rows.
 
 
-## 12. Data dictionary: HALL_BLOCK
+## 13. Data dictionary: HALL_BLOCK
 
 Dated maintenance or other hall closures, including multi-day periods.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | BlockID | int | Yes | PRI | Unique hall-closure identifier. MySQL generates this primary-key value; gaps are allowed. |
 | HallID | int | Yes | FK | Lecture-hall identifier. Every booking and hall block refers to one hall. |
@@ -238,25 +252,11 @@ Dated maintenance or other hall closures, including multi-day periods.
 | BlockStatus | enum('Active', 'Cancelled') | Yes | - | Active or Cancelled. Cancellation retains the closure record. Default: Active. |
 
 
-## 13. Data dictionary: HALL_FACILITY
-
-Hall-to-facility M:N assignment, with total and working quantities.
-
-| Column | SQL type | Required | Key | Meaning / reason |
-| --- | --- | --- | --- | --- |
-| HallID | int | Yes | PK part + FK | Lecture-hall identifier. Every booking and hall block refers to one hall. |
-| FacilityID | int | Yes | PK part + FK | Facility-type identifier. The same type can occur in several halls. |
-| Quantity | int | Yes | PK part + FK | Positive integer total of this facility type in this hall. |
-| WorkingQuantity | int | Yes | PK part + FK | Integer between zero and Quantity inclusive; zero working units is valid. |
-
-The two key columns are unique together. Either individual value can repeat in other rows. This represents an M:N relationship without a comma-separated list.
-
-
 ## 14. Data dictionary: BOOKING_GROUP
 
 Booking-to-student-group M:N assignment.
 
-| Column | SQL type | Required | Key | Meaning / reason |
+| Column | SQL type | Req. | Key | Meaning / reason |
 | --- | --- | --- | --- | --- |
 | BookingID | int | Yes | PK part + FK | Unique identifier for one request, including requests retained after cancellation or rejection. |
 | GroupID | int | Yes | PK part + FK | Student-group identifier. |
@@ -921,7 +921,41 @@ Encapsulation protects object state, abstraction gives a clear repository contra
 Your first application connection lesson will create a dedicated database login with a private password, assign hallsync_application, configure the timezone/encoding and test one read. No password belongs in a public repository.
 
 
-## 30. Technical references
+## 30. SQL vocabulary used in these scripts
+
+| Keyword / expression | What it means here |
+| --- | --- |
+| CREATE TABLE / DDL | Defines stored structure. DDL is not the same as inserting department or booking records. |
+| INSERT / UPDATE / DELETE | Change rows. Deleting a Pending booking group set during an edit is distinct from deleting booking history. |
+| PROCEDURE / CALL | A stored operation with parameters; CALL invokes it. Public procedures are the application entry points. |
+| IN / OUT parameters | IN supplies a value. OUT returns a generated identifier through a caller variable. |
+| DECLARE versus @variable | DECLARE creates a local routine variable. An @variable belongs to one client connection. |
+| LAST_INSERT_ID() | Returns that connection generated ID; using MAX(ID) instead could select another user row. |
+| IF / EXISTS / SELECT 1 | Conditional checks. EXISTS asks whether any matching row exists, without needing all its columns. |
+| TRIM / CHAR_LENGTH | Evaluate text after removing outer ordinary spaces, and count characters rather than bytes. |
+| FLOOR | Checks that attendance has no fractional part before storing an integer. |
+| JSON_ARRAY / JSON_TABLE | Send several group IDs in one input, then turn them into rows. Group links are stored relationally. |
+| JSON_ARRAYAGG / COALESCE | Collect existing group IDs for revalidation; substitute an empty array when none exist. |
+| SIGNAL SQLSTATE 45000 | Raise a controlled business-rule rejection with a useful message. |
+| EXIT HANDLER / RESIGNAL | On a SQL exception, roll back this procedure transaction and propagate the original error. |
+| START TRANSACTION / COMMIT | Begin one atomic business operation and make its successful changes permanent. |
+| ROLLBACK | Undo this transaction changes after failure. It does not undo an entire earlier DDL installation. |
+| FOR UPDATE / FOR SHARE | Take row locks. Hall writes coordinate with FOR UPDATE; account checks hold a shared read lock. |
+| READ COMMITTED | Each new consistent read sees the latest committed data, including after a hall-lock wait. |
+| ON DUPLICATE KEY UPDATE | Update the existing hall/facility pair when its composite key already exists. |
+| JOIN / LEFT JOIN | Require a matching parent or retain a row when optional course/reviewer data is absent. |
+| SQL SECURITY DEFINER | Execute the stored operation using its installer privileges; the caller still needs EXECUTE permission. |
+| GRANT / MySQL role | Control database-login privileges. This is separate from USER_ACCOUNT.Role for application users. |
+| DELIMITER | A Workbench/client directive for sending a complete procedure body containing internal semicolons. |
+
+The controller must still authenticate a human user. SQL SECURITY DEFINER and a MySQL role do not turn a caller-supplied actor ID into proof of identity.
+
+Database CHECK expressions use SQL NULL semantics. Required columns and explicit IS NULL / IS NOT NULL review-bundle checks are necessary to express the intended rules.
+
+MySQL TIME can also represent durations beyond one day. The booking clock CHECK narrows it to the same-day interval supported by this project.
+
+
+## 31. Technical references
 
 
 ### MySQL CREATE TABLE and CHECK constraints

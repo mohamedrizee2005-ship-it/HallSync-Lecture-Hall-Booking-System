@@ -2,7 +2,7 @@
 from pathlib import Path
 from collections import defaultdict
 import json,html,textwrap,math
-from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer,Table,TableStyle,PageBreak,Preformatted,Flowable,KeepTogether
+from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer,Table,TableStyle,PageBreak,Preformatted,Flowable,KeepTogether,CondPageBreak
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet,ParagraphStyle
 from reportlab.lib.pagesizes import A4
@@ -25,7 +25,7 @@ def esc(s):return html.escape(str(s))
 def p(text):
     story.append(Paragraph(esc(text),styles['BodyGuide']));md.append(text+'\n')
 def heading(text,new=True):
-    if new and story:story.append(PageBreak())
+    if new and story:story.append(CondPageBreak(520))
     story.append(Paragraph(esc(text),styles['HGuide']));md.append('\n## '+text+'\n')
 def sub(text):
     story.append(Paragraph(esc(text),styles['SubGuide']));md.append('\n### '+text+'\n')
@@ -132,7 +132,7 @@ purposes={
 'BOOKING_GROUP':'Booking-to-student-group M:N assignment.'}
 order=list(purposes)
 table(['Table','Purpose'],[[t,purposes[t]] for t in order],[135,372])
-p('Key legend: PRI = primary key, UNI = unique key, FK = foreign key. Required means NOT NULL.')
+p('Key legend: PRI = primary key, UNI = unique key, FK = foreign key. Req. means NOT NULL.')
 p('A report is a query over existing data, so the design has no stored REPORT entity. The four views provide report datasets. SQL tables describe stored facts; OOP classes will also describe behaviour and do not have to map one-to-one to tables.')
 p('Names are not substituted for identifiers. For example, a booking stores RequesterID and HallID, while joins retrieve the current account and hall names.')
 
@@ -174,7 +174,7 @@ descriptions={
 'BookingType':'Lecture, Tutorial, Exam or Event. Academic types impose extra course/group requirements.',
 'ExpectedAttendance':'Positive integer expected headcount. Individual student enrolments are outside v1.',
 'BookingStatus':'Current lifecycle state: Pending, Approved, Rejected, Cancelled or Completed.',
-'RequestedAt':'Local date/time when the request was recorded. Default is CURRENT_TIMESTAMP.',
+'RequestedAt':'Local date/time when the request was recorded.',
 'ReviewerID':'Optional administrator reference; different from RequesterID when a review exists.',
 'Decision':'Approved or Rejected. Preserve an earlier approval after later cancellation.',
 'ReviewedAt':'Optional local review timestamp; cannot be before RequestedAt.',
@@ -204,7 +204,7 @@ for index,t in enumerate(dictionary_order,1):
         if col['extra']=='auto_increment':detail+=' MySQL generates this primary-key value; gaps are allowed.'
         if col['default'] is not None:detail+=' Default: '+str(col['default'])+'.'
         rows.append([col['column'],typ,'Yes' if col['nullable']=='NO' else 'No',key,detail])
-    table(['Column','SQL type','Required','Key','Meaning / reason'],rows,[100,104,48,55,200])
+    table(['Column','SQL type','Req.','Key','Meaning / reason'],rows,[100,104,48,55,200])
     if t=='USER_ACCOUNT':
         p('PasswordHash stores no plaintext password. Hashing and password verification use a maintained Argon2id library in the application. The procedure checks the encoded prefix and length, not the original password or its strength.')
     if t=='BOOKING':
