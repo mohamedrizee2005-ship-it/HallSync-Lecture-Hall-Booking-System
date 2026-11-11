@@ -1,0 +1,65 @@
+name: Validate HallSync database
+on:
+  push:
+    branches: [main, codex/complete-database]
+    paths:
+      - 'database/**'
+      - 'docs/build_database_guide.py'
+permissions:
+  contents: read
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      mysql:
+        image: mysql:8.0.46
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    steps:
+      - name: Check out requested public commit
+        env:
+          REPO_URL: https://github.com/${{ github.repository }}.git
+          REVISION: ${{ github.sha }}
+        run: |
+          git init .
+          git remote add origin "$REPO_URL"
+          git fetch --depth=1 origin "$REVISION"
+          git checkout --detach FETCH_HEAD
+      - name: Install pinned test and document dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install PyMySQL==1.1.1 argon2-cffi==25.1.0 reportlab==4.4.3 pypdf==6.1.1
+      - name: Test schema, workflows, and concurrent approvals
+        env:
+          HALLSYNC_TEST_HOST: 127.0.0.1
+          HALLSYNC_TEST_USER: root
+          HALLSYNC_TEST_PASSWORD: ''
+        run: .venv/bin/python database/tests/run_checks.py
+      - name: Build learning guide
+        run: .venv/bin/python docs/build_database_guide.py
+      - name: Provide reviewable document output
+        run: |
+          .venv/bin/python - <<'PY'
+          import base64
+          from pathlib import Path
+          for label,name in [('GUIDE_PDF','HallSync_Complete_Database_Guide.pdf'),('GUIDE_MD','Database_Guide.md'),('VALIDATION','database_validation.json')]:
+              print(label+'_BEGIN')
+              print(base64.b64encode((Path('docs')/name).read_bytes()).decode('ascii'))
+              print(label+'_END')
+          PY
+      - name: Upload guide and validation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: HallSync-database-guide
+          path: |
+            docs/HallSync_Complete_Database_Guide.pdf
+            docs/Database_Guide.md
+            docs/database_validation.json
