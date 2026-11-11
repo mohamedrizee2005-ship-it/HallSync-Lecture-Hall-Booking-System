@@ -2,7 +2,7 @@
 from pathlib import Path
 from collections import defaultdict
 import json,html,textwrap,math
-from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer,Table,TableStyle,PageBreak,Preformatted,Flowable
+from reportlab.platypus import SimpleDocTemplate,Paragraph,Spacer,Table,TableStyle,PageBreak,Preformatted,Flowable,KeepTogether
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet,ParagraphStyle
 from reportlab.lib.pagesizes import A4
@@ -15,8 +15,8 @@ NAVY=colors.HexColor('#123354');BLUE=colors.HexColor('#1763A0');PALE=colors.HexC
 styles=getSampleStyleSheet()
 styles.add(ParagraphStyle(name='BodyGuide',fontName='Helvetica',fontSize=9.5,leading=14,spaceAfter=8,textColor=NAVY))
 styles.add(ParagraphStyle(name='TitleGuide',fontName='Helvetica-Bold',fontSize=25,leading=30,textColor=NAVY,spaceAfter=18))
-styles.add(ParagraphStyle(name='HGuide',fontName='Helvetica-Bold',fontSize=17,leading=22,textColor=BLUE,spaceAfter=13))
-styles.add(ParagraphStyle(name='SubGuide',fontName='Helvetica-Bold',fontSize=11.5,leading=16,textColor=NAVY,spaceBefore=10,spaceAfter=7))
+styles.add(ParagraphStyle(name='HGuide',fontName='Helvetica-Bold',fontSize=17,leading=22,textColor=BLUE,spaceAfter=13,keepWithNext=True))
+styles.add(ParagraphStyle(name='SubGuide',fontName='Helvetica-Bold',fontSize=11.5,leading=16,textColor=NAVY,spaceBefore=10,spaceAfter=7,keepWithNext=True))
 styles.add(ParagraphStyle(name='CellGuide',fontName='Helvetica',fontSize=8.4,leading=11.5,textColor=NAVY))
 styles.add(ParagraphStyle(name='HeadCell',fontName='Helvetica-Bold',fontSize=8.5,leading=11.5,textColor=colors.white))
 styles.add(ParagraphStyle(name='CodeGuide',fontName='Courier',fontSize=7.5,leading=10.5,textColor=NAVY,leftIndent=6,spaceAfter=10))
@@ -189,8 +189,9 @@ descriptions={
 'WorkingQuantity':'Integer between zero and Quantity inclusive; zero working units is valid.'}
 bytable=defaultdict(list)
 for col in data['columns']:bytable[col['table'].upper()].append(col)
-for index,t in enumerate(order,1):
-    heading(str(index+3)+'. Data dictionary: '+t)
+dictionary_order=['DEPARTMENT','BUILDING','FACILITY','USER_ACCOUNT','COURSE_UNIT','STUDENT_GROUP','LECTURE_HALL','HALL_FACILITY','BOOKING','HALL_BLOCK','BOOKING_GROUP']
+for index,t in enumerate(dictionary_order,1):
+    heading(str(index+3)+'. Data dictionary: '+t,new=index not in [2,3,6,8,11])
     p(purposes[t])
     rows=[]
     for col in sorted(bytable[t],key=lambda x:x['ordinal']):
@@ -300,9 +301,11 @@ descs={
 'sp_add_student_group':'Admin adds a teaching group with department/intake identity.',
 'sp_add_hall':'Admin adds a physical hall in an existing building.'}
 for item in manifest:
+    group_start=len(story)
     sub(item['name'])
     p(descs[item['name']])
     code(item['name']+'('+item['params']+')')
+    story[group_start:]=[KeepTogether(story[group_start:])]
 p('The six _hs_* helpers are implementation details: actor validation, hall locking, input validation, slot checks, group insertion and account-field validation. Application accounts receive EXECUTE on public procedures only, not helpers.')
 
 heading('22. Run a complete booking example')
@@ -433,8 +436,16 @@ def page(canvas,doc):
     canvas.drawString(44,24,'University group project | MySQL 8.0.46')
     canvas.drawRightString(w-44,24,str(doc.page))
     canvas.restoreState()
+class GuideDoc(SimpleDocTemplate):
+    def afterFlowable(self,flowable):
+        if isinstance(flowable,Paragraph) and flowable.style.name=='HGuide':
+            count=getattr(self,'bookmark_count',0)+1;self.bookmark_count=count
+            key='section_'+str(count)
+            self.canv.bookmarkPage(key)
+            self.canv.addOutlineEntry(flowable.getPlainText(),key,0)
+
 pdf=DOCS/'HallSync_Complete_Database_Guide.pdf'
-doc=SimpleDocTemplate(str(pdf),pagesize=A4,rightMargin=44,leftMargin=44,topMargin=56,bottomMargin=42,
+doc=GuideDoc(str(pdf),pagesize=A4,rightMargin=44,leftMargin=44,topMargin=56,bottomMargin=42,
  title='HallSync - Complete Database Implementation Guide',author='HallSync project learning guide',pageCompression=1)
 doc.build(story,onFirstPage=page,onLaterPages=page)
 (DOCS/'Database_Guide.md').write_text('# HallSync - Complete Database Implementation Guide\n\n'+'\n'.join(md))
@@ -444,3 +455,25 @@ assert len(reader.pages)>=25 and all(t in text for t in order)
 assert 'RequesterID' in text and 'WorkingQuantity' in text and '28' in text
 assert '/JavaScript' not in pdf.read_bytes().decode('latin1')
 print('GUIDE BUILT',len(reader.pages),'pages',pdf.stat().st_size,'bytes')
+
+# Render every page for review; selected pages are also provided at reading size.
+import fitz
+from PIL import Image,ImageDraw
+rendered=fitz.open(pdf)
+previews=DOCS/'previews';previews.mkdir(exist_ok=True)
+for start in range(0,len(rendered),8):
+    board=Image.new('RGB',(1000,760),'#dce5ed')
+    draw=ImageDraw.Draw(board)
+    for slot,index in enumerate(range(start,min(start+8,len(rendered)))):
+        pix=rendered[index].get_pixmap(matrix=fitz.Matrix(.45,.45),alpha=False)
+        im=Image.frombytes('RGB',(pix.width,pix.height),pix.samples)
+        im.thumbnail((230,345))
+        x=(slot%4)*250+10;y=(slot//4)*380+25
+        board.paste(im,(x,y));draw.text((x,y-18),'Page '+str(index+1),fill='#123354')
+    board.save(previews/('board_'+chr(65+start//8)+'.jpg'),quality=88)
+for index in [0,1,4,8,11,15,20,25,30]:
+    if index<len(rendered):
+        pix=rendered[index].get_pixmap(matrix=fitz.Matrix(1.3,1.3),alpha=False)
+        im=Image.frombytes('RGB',(pix.width,pix.height),pix.samples)
+        im.save(previews/('page_'+chr(65+index)+'.jpg'),quality=90)
+print('GUIDE_PREVIEWS',len(rendered),'pages rendered')

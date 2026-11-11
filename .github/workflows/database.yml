@@ -36,7 +36,7 @@ jobs:
       - name: Install pinned test and document dependencies
         run: |
           python3 -m venv .venv
-          .venv/bin/pip install PyMySQL==1.1.1 argon2-cffi==25.1.0 reportlab==4.4.3 pypdf==6.1.1
+          .venv/bin/pip install PyMySQL==1.1.1 argon2-cffi==25.1.0 reportlab==4.4.3 pypdf==6.1.1 PyMuPDF==1.26.5
       - name: Test schema, workflows, and concurrent approvals
         env:
           HALLSYNC_TEST_HOST: 127.0.0.1
@@ -60,6 +60,12 @@ jobs:
               encoded=base64.b64encode((Path('database')/name).read_bytes()).decode('ascii')
               for start in range(0,len(encoded),2048): print('ARTIFACT_'+label+'_CHUNK '+encoded[start:start+2048])
               print('ARTIFACT_'+label+'_END')
+          for item in sorted((Path('docs')/'previews').glob('*.jpg')):
+              label='PREVIEW_'+item.stem.upper()
+              print('ARTIFACT_'+label+'_BEGIN')
+              encoded=base64.b64encode(item.read_bytes()).decode('ascii')
+              for start in range(0,len(encoded),2048): print('ARTIFACT_'+label+'_CHUNK '+encoded[start:start+2048])
+              print('ARTIFACT_'+label+'_END')
           PY
       - name: Upload guide and validation report
         uses: actions/upload-artifact@v4
@@ -72,3 +78,4 @@ jobs:
             database/complete_existing_database.sql
             database/fresh_install.sql
             database/07_demo_data.sql
+            docs/previews/*.jpg
