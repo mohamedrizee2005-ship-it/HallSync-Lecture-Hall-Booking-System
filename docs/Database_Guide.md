@@ -12,22 +12,22 @@ MySQL 8.0.46 | Database implementation v2 | 11 November 2026
 
 A study guide for understanding the database, running the complete setup, explaining the rules in a presentation, and connecting an object-oriented application later.
 
-Your existing department record is preserved. The main continuation script adds the remaining database objects without dropping the database.
+HallSync_Full_Setup.sql creates the database when missing, preserves existing department rows and completes the database without dropping tables.
 
 Validation: 100 checks passed against MySQL 8.0.46. This includes independent-connection approval races, approval-versus-closure races, and a hall-lock waiting check.
 
 The scripts are complete in the repository. They create the database objects on your laptop only when you execute them in Workbench.
 
 
-## 1. Start here: the one-file continuation
+## 1. Start here: the one-file full setup
 
-You have already created hallsync_db, the DEPARTMENT table and the Industrial Management row. Use database/complete_existing_database.sql to finish that database in one execution.
+Use database/HallSync_Full_Setup.sql once. It supports a new database, an empty hallsync_db, or your matching DEPARTMENT-only database.
 
 - Download the latest repository ZIP and extract it to a normal writable folder.
 
-- Open your existing MySQL Workbench connection and open complete_existing_database.sql.
+- Open your existing MySQL Workbench connection and open HallSync_Full_Setup.sql.
 
-- Enable Stop Script Execution On Errors. Execute the complete file with no text selected.
+- Enable Stop Script Execution On Errors. Execute the complete file once with no text selected.
 
 - If an error appears, stop and send the error message. Do not drop the database or blindly rerun the file.
 
@@ -44,7 +44,7 @@ You have already created hallsync_db, the DEPARTMENT table and the Industrial Ma
 | Views | 4 |
 | Procedures | 25 (19 public + 6 internal) |
 
-The preflight requires exactly the department table from step 02. It refuses to continue over a partially completed or different schema. This is deliberate: CREATE TABLE IF NOT EXISTS would hide differences in an existing definition.
+The full setup creates the database and DEPARTMENT table when missing. Its preflight then requires exactly that matching table before adding the remaining objects. It stops over a partially completed, fully installed or different schema; do not rerun it after success.
 
 MySQL DDL can commit independently. A multi-statement installation is not one rollbackable transaction. Preserve the error output if installation stops partway through.
 
@@ -61,11 +61,12 @@ WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 
 | File | Purpose and when to run |
 | --- | --- |
-| 01_create_database.sql | Already completed. Creates the empty project database. |
-| 02_create_department.sql | Already completed. Creates the first table. |
-| 03_insert_sample_department.sql | Already completed. Repeating its INSERT creates another department row. |
-| complete_existing_database.sql | Recommended now. Combines 04, 05, 06, 07, 10 and 08. Run once on your existing one-table database. |
-| fresh_install.sql | Alternative for a new empty installation. Requires the hallsync_db name to be unused. |
+| HallSync_Full_Setup.sql | Recommended setup. Creates the database, tables, procedures, views, demo records and application role, then verifies them. Run once. |
+| 01_create_database.sql | Earlier lesson: creates the database. The full setup already handles this step. |
+| 02_create_department.sql | Earlier lesson: creates the first table. The full setup already handles this step. |
+| 03_insert_sample_department.sql | Earlier sample-data lesson. Repeating its INSERT creates another department row. |
+| complete_existing_database.sql | Earlier alternative for a matching department-only database; not an additional step after the full setup. |
+| fresh_install.sql | Earlier alternative requiring an unused database name; not an additional step after the full setup. |
 | 04_complete_schema.sql | Individual script: validates DEPARTMENT and adds the other 10 tables. |
 | 05_business_workflows.sql | Individual script: installs public procedures and internal helpers. |
 | 06_views_and_reports.sql | Individual script: creates four reporting views. |
@@ -75,7 +76,7 @@ WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';
 | 10_application_role.sql | Creates a least-privilege MySQL role; does not create a login or password. |
 | tests/run_checks.py | Developer validation. Creates isolated generated schemas, tests them, then removes only those schemas. |
 
-Choose the combined continuation OR the individual 04-10 setup sequence. Once the combined file succeeds, use 08 to inspect it. The fresh-install file is for a different starting condition.
+For normal setup, run only HallSync_Full_Setup.sql once. The numbered files and older combined installers remain lesson or compatibility references. After success, 08_verify_database.sql can recheck the installation without changing data.
 
 Every setup/business connection uses Asia/Colombo civil time through the +05:30 offset. This works without loading named MySQL timezone tables. Application connections must follow the same convention.
 
@@ -835,9 +836,9 @@ Store all system times consistently in Asia/Colombo. A start later today is vali
 | Symptom | Action |
 | --- | --- |
 | Database/table already exists | You may have run a creation step already. Inspect with 08 and SHOW CREATE TABLE; preserve data instead of resetting. |
-| Preflight expected only DEPARTMENT | The continuation starting condition differs, or a previous run stopped partway through. Share the exact error and existing table list. |
+| Preflight expected only DEPARTMENT | Existing tables differ from the supported starting condition, or an earlier installation stopped partway through. Share the exact error and table list. |
 | Syntax error near DELIMITER | Open the SQL file and execute the whole procedure definition. DELIMITER is a client directive, not SQL to send as a server statement. |
-| Procedure does not exist | Complete 05 first. Check the selected database and routine list. |
+| Procedure does not exist | Inspect setup Action Output, the selected database and the routine list before repairing the installation. |
 | Transaction characteristics cannot change | A write procedure was called within an existing transaction. Resolve that transaction and call the procedure outside an outer transaction. |
 | CHECK / FK / duplicate-key error | Input violates a named rule. Fix the supplied values or create the parent record first. |
 | SQLSTATE 45000 | Business-rule rejection. Display its message and leave the existing record unchanged. |
@@ -912,7 +913,7 @@ Before hashing in the application. Only the salted encoded hash is stored.
 
 ## 29. Next: connect an OOP application
 
-After you run the continuation script and confirm the 08 results, the next stage is the application model. Start with UserAccount, LectureHall and Booking responsibilities, then an interface such as BookingRepository and a database implementation.
+After HallSync_Full_Setup.sql succeeds and you confirm the verification results, the next stage is the application model. Start with UserAccount, LectureHall and Booking responsibilities, then an interface such as BookingRepository and a database implementation.
 
 A booking service coordinates authenticated actions. A repository calls the stored procedures and converts their results into objects. The UI presents information and explains rejections. Java can use JDBC with MySQL Connector/J; another chosen OOP language uses its supported MySQL driver.
 

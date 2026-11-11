@@ -81,29 +81,30 @@ p('Faculty of Science prototype | University of Kelaniya, Sri Lanka')
 p('MySQL 8.0.46 | Database implementation v2 | 11 November 2026')
 table(['Tables','Columns','Foreign keys'],[['11','61','14']], [169,169,169])
 p('A study guide for understanding the database, running the complete setup, explaining the rules in a presentation, and connecting an object-oriented application later.')
-p('Your existing department record is preserved. The main continuation script adds the remaining database objects without dropping the database.')
+p('HallSync_Full_Setup.sql creates the database when missing, preserves existing department rows and completes the database without dropping tables.')
 p('Validation: '+str(data['checks_passed'])+' checks passed against MySQL '+data['mysql_version']+'. This includes independent-connection approval races, approval-versus-closure races, and a hall-lock waiting check.')
 p('The scripts are complete in the repository. They create the database objects on your laptop only when you execute them in Workbench.')
 
-heading('1. Start here: the one-file continuation')
-p('You have already created hallsync_db, the DEPARTMENT table and the Industrial Management row. Use database/complete_existing_database.sql to finish that database in one execution.')
+heading('1. Start here: the one-file full setup')
+p('Use database/HallSync_Full_Setup.sql once. It supports a new database, an empty hallsync_db, or your matching DEPARTMENT-only database.')
 bullets(['Download the latest repository ZIP and extract it to a normal writable folder.',
-'Open your existing MySQL Workbench connection and open complete_existing_database.sql.',
-'Enable Stop Script Execution On Errors. Execute the complete file with no text selected.',
+'Open your existing MySQL Workbench connection and open HallSync_Full_Setup.sql.',
+'Enable Stop Script Execution On Errors. Execute the complete file once with no text selected.',
 'If an error appears, stop and send the error message. Do not drop the database or blindly rerun the file.',
 'Refresh SCHEMAS. The final verification grid should show the expected object counts below.'])
 table(['Object','Expected'],[['Base tables','11'],['Columns in base tables','61'],['Primary keys','11'],['Foreign keys','14'],['Additional unique keys','7'],['CHECK constraints','28'],['Views','4'],['Procedures','25 (19 public + 6 internal)']],[330,177])
-p('The preflight requires exactly the department table from step 02. It refuses to continue over a partially completed or different schema. This is deliberate: CREATE TABLE IF NOT EXISTS would hide differences in an existing definition.')
+p('The full setup creates the database and DEPARTMENT table when missing. Its preflight then requires exactly that matching table before adding the remaining objects. It stops over a partially completed, fully installed or different schema; do not rerun it after success.')
 p('MySQL DDL can commit independently. A multi-statement installation is not one rollbackable transaction. Preserve the error output if installation stops partway through.')
 code('USE hallsync_db;\nSHOW TABLES;\nSELECT COUNT(*) AS TableCount FROM information_schema.tables\nWHERE table_schema = DATABASE() AND table_type = \'BASE TABLE\';')
 
 heading('2. Files and execution order')
 table(['File','Purpose and when to run'],[
-['01_create_database.sql','Already completed. Creates the empty project database.'],
-['02_create_department.sql','Already completed. Creates the first table.'],
-['03_insert_sample_department.sql','Already completed. Repeating its INSERT creates another department row.'],
-['complete_existing_database.sql','Recommended now. Combines 04, 05, 06, 07, 10 and 08. Run once on your existing one-table database.'],
-['fresh_install.sql','Alternative for a new empty installation. Requires the hallsync_db name to be unused.'],
+['HallSync_Full_Setup.sql','Recommended setup. Creates the database, tables, procedures, views, demo records and application role, then verifies them. Run once.'],
+['01_create_database.sql','Earlier lesson: creates the database. The full setup already handles this step.'],
+['02_create_department.sql','Earlier lesson: creates the first table. The full setup already handles this step.'],
+['03_insert_sample_department.sql','Earlier sample-data lesson. Repeating its INSERT creates another department row.'],
+['complete_existing_database.sql','Earlier alternative for a matching department-only database; not an additional step after the full setup.'],
+['fresh_install.sql','Earlier alternative requiring an unused database name; not an additional step after the full setup.'],
 ['04_complete_schema.sql','Individual script: validates DEPARTMENT and adds the other 10 tables.'],
 ['05_business_workflows.sql','Individual script: installs public procedures and internal helpers.'],
 ['06_views_and_reports.sql','Individual script: creates four reporting views.'],
@@ -113,7 +114,7 @@ table(['File','Purpose and when to run'],[
 ['10_application_role.sql','Creates a least-privilege MySQL role; does not create a login or password.'],
 ['tests/run_checks.py','Developer validation. Creates isolated generated schemas, tests them, then removes only those schemas.']
 ],[174,333])
-p('Choose the combined continuation OR the individual 04-10 setup sequence. Once the combined file succeeds, use 08 to inspect it. The fresh-install file is for a different starting condition.')
+p('For normal setup, run only HallSync_Full_Setup.sql once. The numbered files and older combined installers remain lesson or compatibility references. After success, 08_verify_database.sql can recheck the installation without changing data.')
 p('Every setup/business connection uses Asia/Colombo civil time through the +05:30 offset. This works without loading named MySQL timezone tables. Application connections must follow the same convention.')
 
 heading('3. The design: nine entities become eleven tables')
@@ -379,9 +380,9 @@ p('Store all system times consistently in Asia/Colombo. A start later today is v
 heading('27. Troubleshooting in Workbench')
 table(['Symptom','Action'],[
 ['Database/table already exists','You may have run a creation step already. Inspect with 08 and SHOW CREATE TABLE; preserve data instead of resetting.'],
-['Preflight expected only DEPARTMENT','The continuation starting condition differs, or a previous run stopped partway through. Share the exact error and existing table list.'],
+['Preflight expected only DEPARTMENT','Existing tables differ from the supported starting condition, or an earlier installation stopped partway through. Share the exact error and table list.'],
 ['Syntax error near DELIMITER','Open the SQL file and execute the whole procedure definition. DELIMITER is a client directive, not SQL to send as a server statement.'],
-['Procedure does not exist','Complete 05 first. Check the selected database and routine list.'],
+['Procedure does not exist','Inspect setup Action Output, the selected database and the routine list before repairing the installation.'],
 ['Transaction characteristics cannot change','A write procedure was called within an existing transaction. Resolve that transaction and call the procedure outside an outer transaction.'],
 ['CHECK / FK / duplicate-key error','Input violates a named rule. Fix the supplied values or create the parent record first.'],
 ['SQLSTATE 45000','Business-rule rejection. Display its message and leave the existing record unchanged.'],
@@ -407,7 +408,7 @@ qas=[
 for q,a in qas:sub(q);p(a)
 
 heading('29. Next: connect an OOP application')
-p('After you run the continuation script and confirm the 08 results, the next stage is the application model. Start with UserAccount, LectureHall and Booking responsibilities, then an interface such as BookingRepository and a database implementation.')
+p('After HallSync_Full_Setup.sql succeeds and you confirm the verification results, the next stage is the application model. Start with UserAccount, LectureHall and Booking responsibilities, then an interface such as BookingRepository and a database implementation.')
 p('A booking service coordinates authenticated actions. A repository calls the stored procedures and converts their results into objects. The UI presents information and explains rejections. Java can use JDBC with MySQL Connector/J; another chosen OOP language uses its supported MySQL driver.')
 p('Encapsulation protects object state, abstraction gives a clear repository contract, and polymorphism allows a test implementation of that contract. Use inheritance only for a justified is-a relationship. The database remains the authority for concurrent reservation decisions.')
 p('Your first application connection lesson will create a dedicated database login with a private password, assign hallsync_application, configure the timezone/encoding and test one read. No password belongs in a public repository.')
@@ -483,6 +484,7 @@ text='\n'.join(p.extract_text() or '' for p in reader.pages)
 assert len(reader.pages)>=25 and all(t in text for t in order)
 assert all(c['column'] in text for c in data['columns'])
 assert 'RequesterID' in text and 'WorkingQuantity' in text and '28' in text
+assert 'HallSync_Full_Setup.sql' in text
 assert '/JavaScript' not in pdf.read_bytes().decode('latin1')
 print('GUIDE BUILT',len(reader.pages),'pages',pdf.stat().st_size,'bytes')
 
@@ -507,3 +509,4 @@ for index in [0,1,4,8,11,15,20,25,30]:
         im=Image.frombytes('RGB',(pix.width,pix.height),pix.samples)
         im.save(previews/('page_'+chr(65+index)+'.jpg'),quality=90)
 print('GUIDE_PREVIEWS',len(rendered),'pages rendered')
+
