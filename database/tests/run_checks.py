@@ -19,7 +19,7 @@ def connect(db=None,user=None,password=None):
     return pymysql.connect(**opts)
 def query(c,sql,args=()):
     with c.cursor() as cur:
-        cur.execute(sql,args)
+        cur.execute(sql,args or None)
         rows=cur.fetchall()
         while cur.nextset():pass
         return rows
