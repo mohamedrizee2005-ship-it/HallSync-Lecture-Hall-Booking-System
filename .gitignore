@@ -5,3 +5,5 @@ __pycache__/
 .env.*
 !.env.example
 *.log
+application/target/
+application/db.local.properties

@@ -1,0 +1,49 @@
+name: Check Java database connection
+on:
+  push:
+    branches: [main, codex/application-connection]
+    paths:
+      - 'application/**'
+      - 'database/HallSync_Full_Setup.sql'
+      - 'database/tests/run_checks.py'
+      - '.github/workflows/application.yml'
+permissions:
+  contents: read
+jobs:
+  connection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      mysql:
+        image: mysql:8.0.46
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: application/pom.xml
+      - name: Build the Java checker
+        run: mvn -B -ntp -f application/pom.xml clean package
+      - name: Install database test helpers
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install PyMySQL==1.1.1 argon2-cffi==25.1.0
+      - name: Test JDBC against disposable MySQL
+        env:
+          HALLSYNC_TEST_HOST: 127.0.0.1
+          HALLSYNC_TEST_USER: root
+          HALLSYNC_TEST_PASSWORD: ''
+        run: .venv/bin/python application/tests/connection_smoke.py
