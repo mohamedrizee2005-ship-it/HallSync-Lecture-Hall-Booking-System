@@ -1,0 +1,1260 @@
+{
+  "mysql_version": "8.0.46",
+  "checks_passed": 100,
+  "checks": [
+    {
+      "name": "Upgrade preserves existing department ID 1",
+      "passed": true
+    },
+    {
+      "name": "11 tables",
+      "passed": true
+    },
+    {
+      "name": "61 columns",
+      "passed": true
+    },
+    {
+      "name": "11 PRIMARY KEY",
+      "passed": true
+    },
+    {
+      "name": "14 FOREIGN KEY",
+      "passed": true
+    },
+    {
+      "name": "7 UNIQUE",
+      "passed": true
+    },
+    {
+      "name": "28 CHECK",
+      "passed": true
+    },
+    {
+      "name": "4 views",
+      "passed": true
+    },
+    {
+      "name": "25 procedures",
+      "passed": true
+    },
+    {
+      "name": "Demo seed can repeat without duplicate accounts",
+      "passed": true
+    },
+    {
+      "name": "Blank department",
+      "passed": true
+    },
+    {
+      "name": "NULL department",
+      "passed": true
+    },
+    {
+      "name": "Missing parent",
+      "passed": true
+    },
+    {
+      "name": "Zero capacity",
+      "passed": true
+    },
+    {
+      "name": "Duplicate hall facility",
+      "passed": true
+    },
+    {
+      "name": "Working exceeds total",
+      "passed": true
+    },
+    {
+      "name": "Zero facility quantity",
+      "passed": true
+    },
+    {
+      "name": "Student request",
+      "passed": true
+    },
+    {
+      "name": "Attendance zero",
+      "passed": true
+    },
+    {
+      "name": "Fractional attendance",
+      "passed": true
+    },
+    {
+      "name": "Capacity overflow",
+      "passed": true
+    },
+    {
+      "name": "Blank purpose",
+      "passed": true
+    },
+    {
+      "name": "Equal times",
+      "passed": true
+    },
+    {
+      "name": "Overnight times",
+      "passed": true
+    },
+    {
+      "name": "Past start",
+      "passed": true
+    },
+    {
+      "name": "Lecture missing course",
+      "passed": true
+    },
+    {
+      "name": "Tutorial missing group",
+      "passed": true
+    },
+    {
+      "name": "Unknown course",
+      "passed": true
+    },
+    {
+      "name": "Unknown group",
+      "passed": true
+    },
+    {
+      "name": "Duplicate groups",
+      "passed": true
+    },
+    {
+      "name": "String group ID",
+      "passed": true
+    },
+    {
+      "name": "Failed requests leave no booking rows",
+      "passed": true
+    },
+    {
+      "name": "Overlapping Pending requests allowed",
+      "passed": true
+    },
+    {
+      "name": "Group created with booking",
+      "passed": true
+    },
+    {
+      "name": "Student cannot approve",
+      "passed": true
+    },
+    {
+      "name": "Approval metadata consistent",
+      "passed": true
+    },
+    {
+      "name": "Conflicting second approval",
+      "passed": true
+    },
+    {
+      "name": "Failed review rolls back",
+      "passed": true
+    },
+    {
+      "name": "Approved edit forbidden",
+      "passed": true
+    },
+    {
+      "name": "Adjacent intervals allowed",
+      "passed": true
+    },
+    {
+      "name": "Block cannot override approval",
+      "passed": true
+    },
+    {
+      "name": "Capacity shrink cannot break reservation",
+      "passed": true
+    },
+    {
+      "name": "Inactive cannot break reservation",
+      "passed": true
+    },
+    {
+      "name": "Other requester cannot cancel",
+      "passed": true
+    },
+    {
+      "name": "Cancellation retains approval",
+      "passed": true
+    },
+    {
+      "name": "Cancellation retains groups",
+      "passed": true
+    },
+    {
+      "name": "Cancelled terminal",
+      "passed": true
+    },
+    {
+      "name": "Group history protects parent",
+      "passed": true
+    },
+    {
+      "name": "Account history protects parent",
+      "passed": true
+    },
+    {
+      "name": "Self approval prohibited",
+      "passed": true
+    },
+    {
+      "name": "Different admin may approve staff request",
+      "passed": true
+    },
+    {
+      "name": "Cannot complete before session end",
+      "passed": true
+    },
+    {
+      "name": "Approval rechecks multi-day closure",
+      "passed": true
+    },
+    {
+      "name": "Cancelled closure releases availability",
+      "passed": true
+    },
+    {
+      "name": "Closure cancellation is terminal",
+      "passed": true
+    },
+    {
+      "name": "Lecturer cannot create closure",
+      "passed": true
+    },
+    {
+      "name": "Only owner edits Pending",
+      "passed": true
+    },
+    {
+      "name": "Pending edit updates groups",
+      "passed": true
+    },
+    {
+      "name": "Invalid edit rolls back",
+      "passed": true
+    },
+    {
+      "name": "Old values retained after failed edit",
+      "passed": true
+    },
+    {
+      "name": "Rejected terminal",
+      "passed": true
+    },
+    {
+      "name": "Rejected cannot cancel",
+      "passed": true
+    },
+    {
+      "name": "Pending cancellation needs no review",
+      "passed": true
+    },
+    {
+      "name": "Ended approval can complete",
+      "passed": true
+    },
+    {
+      "name": "Completed terminal",
+      "passed": true
+    },
+    {
+      "name": "Student cannot provision lecturer",
+      "passed": true
+    },
+    {
+      "name": "Plaintext password refused",
+      "passed": true
+    },
+    {
+      "name": "Public registration fixes Student role",
+      "passed": true
+    },
+    {
+      "name": "Admin provisions privileged role",
+      "passed": true
+    },
+    {
+      "name": "Inactive requester refused",
+      "passed": true
+    },
+    {
+      "name": "Working quantity zero allowed",
+      "passed": true
+    },
+    {
+      "name": "Invalid inventory update",
+      "passed": true
+    },
+    {
+      "name": "Student cannot manage inventory",
+      "passed": true
+    },
+    {
+      "name": "Lecturer cannot add hall",
+      "passed": true
+    },
+    {
+      "name": "Inactive hall refuses requests",
+      "passed": true
+    },
+    {
+      "name": "Unreserved hall state can change",
+      "passed": true
+    },
+    {
+      "name": "Details view has one row per booking",
+      "passed": true
+    },
+    {
+      "name": "Status report totals match",
+      "passed": true
+    },
+    {
+      "name": "Concurrent conflicting approvals 1",
+      "passed": true
+    },
+    {
+      "name": "Race leaves exactly one Approved 1",
+      "passed": true
+    },
+    {
+      "name": "Concurrent conflicting approvals 2",
+      "passed": true
+    },
+    {
+      "name": "Race leaves exactly one Approved 2",
+      "passed": true
+    },
+    {
+      "name": "Concurrent conflicting approvals 3",
+      "passed": true
+    },
+    {
+      "name": "Race leaves exactly one Approved 3",
+      "passed": true
+    },
+    {
+      "name": "Concurrent conflicting approvals 4",
+      "passed": true
+    },
+    {
+      "name": "Race leaves exactly one Approved 4",
+      "passed": true
+    },
+    {
+      "name": "Concurrent conflicting approvals 5",
+      "passed": true
+    },
+    {
+      "name": "Race leaves exactly one Approved 5",
+      "passed": true
+    },
+    {
+      "name": "Concurrent approval versus closure 1",
+      "passed": true
+    },
+    {
+      "name": "Concurrent approval versus closure 2",
+      "passed": true
+    },
+    {
+      "name": "Concurrent approval versus closure 3",
+      "passed": true
+    },
+    {
+      "name": "Approval waits for the common hall lock",
+      "passed": true
+    },
+    {
+      "name": "Application cannot insert raw bookings",
+      "passed": true
+    },
+    {
+      "name": "Application cannot read raw password table",
+      "passed": true
+    },
+    {
+      "name": "Application cannot call internal helper",
+      "passed": true
+    },
+    {
+      "name": "Application can read approved reporting interface",
+      "passed": true
+    },
+    {
+      "name": "Application can call availability interface",
+      "passed": true
+    },
+    {
+      "name": "Fresh installation creates 11 tables",
+      "passed": true
+    },
+    {
+      "name": "Fresh installation creates 61 columns",
+      "passed": true
+    },
+    {
+      "name": "No approved overlaps remain",
+      "passed": true
+    }
+  ],
+  "tables": 11,
+  "columns_count": 61,
+  "primary_keys": 11,
+  "foreign_keys_count": 14,
+  "unique_keys": 7,
+  "check_constraints": 28,
+  "views": 4,
+  "procedures": 25,
+  "concurrency": {
+    "approval_races": 5,
+    "approval_block_races": 3,
+    "lock_wait_checked": true
+  },
+  "department_preserved": true,
+  "columns": [
+    {
+      "table": "BOOKING",
+      "column": "BookingID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "auto_increment",
+      "key": "PRI"
+    },
+    {
+      "table": "BOOKING",
+      "column": "RequesterID",
+      "ordinal": 2,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "BOOKING",
+      "column": "HallID",
+      "ordinal": 3,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "BOOKING",
+      "column": "CourseID",
+      "ordinal": 4,
+      "type": "int",
+      "nullable": "YES",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "BOOKING",
+      "column": "BookingDate",
+      "ordinal": 5,
+      "type": "date",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "StartTime",
+      "ordinal": 6,
+      "type": "time",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "EndTime",
+      "ordinal": 7,
+      "type": "time",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "Purpose",
+      "ordinal": 8,
+      "type": "varchar(255)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "BookingType",
+      "ordinal": 9,
+      "type": "enum('Lecture','Tutorial','Exam','Event')",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "ExpectedAttendance",
+      "ordinal": 10,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "BookingStatus",
+      "ordinal": 11,
+      "type": "enum('Pending','Approved','Rejected','Cancelled','Completed')",
+      "nullable": "NO",
+      "default": "Pending",
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "RequestedAt",
+      "ordinal": 12,
+      "type": "datetime",
+      "nullable": "NO",
+      "default": "CURRENT_TIMESTAMP",
+      "extra": "DEFAULT_GENERATED",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "ReviewerID",
+      "ordinal": 13,
+      "type": "int",
+      "nullable": "YES",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "BOOKING",
+      "column": "Decision",
+      "ordinal": 14,
+      "type": "enum('Approved','Rejected')",
+      "nullable": "YES",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "ReviewedAt",
+      "ordinal": 15,
+      "type": "datetime",
+      "nullable": "YES",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING",
+      "column": "ReviewNote",
+      "ordinal": 16,
+      "type": "varchar(500)",
+      "nullable": "YES",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BOOKING_GROUP",
+      "column": "BookingID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "PRI"
+    },
+    {
+      "table": "BOOKING_GROUP",
+      "column": "GroupID",
+      "ordinal": 2,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "PRI"
+    },
+    {
+      "table": "BUILDING",
+      "column": "BuildingID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "auto_increment",
+      "key": "PRI"
+    },
+    {
+      "table": "BUILDING",
+      "column": "BuildingCode",
+      "ordinal": 2,
+      "type": "varchar(20)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "UNI"
+    },
+    {
+      "table": "BUILDING",
+      "column": "BuildingName",
+      "ordinal": 3,
+      "type": "varchar(100)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "BUILDING",
+      "column": "LocationDescription",
+      "ordinal": 4,
+      "type": "varchar(255)",
+      "nullable": "YES",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "COURSE_UNIT",
+      "column": "CourseID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "auto_increment",
+      "key": "PRI"
+    },
+    {
+      "table": "COURSE_UNIT",
+      "column": "DepartmentID",
+      "ordinal": 2,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "COURSE_UNIT",
+      "column": "CourseCode",
+      "ordinal": 3,
+      "type": "varchar(20)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "UNI"
+    },
+    {
+      "table": "COURSE_UNIT",
+      "column": "CourseTitle",
+      "ordinal": 4,
+      "type": "varchar(150)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "DEPARTMENT",
+      "column": "DepartmentID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "auto_increment",
+      "key": "PRI"
+    },
+    {
+      "table": "DEPARTMENT",
+      "column": "DepartmentName",
+      "ordinal": 2,
+      "type": "varchar(100)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "FACILITY",
+      "column": "FacilityID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "auto_increment",
+      "key": "PRI"
+    },
+    {
+      "table": "FACILITY",
+      "column": "FacilityName",
+      "ordinal": 2,
+      "type": "varchar(100)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "UNI"
+    },
+    {
+      "table": "FACILITY",
+      "column": "Description",
+      "ordinal": 3,
+      "type": "varchar(255)",
+      "nullable": "YES",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "HALL_BLOCK",
+      "column": "BlockID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "auto_increment",
+      "key": "PRI"
+    },
+    {
+      "table": "HALL_BLOCK",
+      "column": "HallID",
+      "ordinal": 2,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "HALL_BLOCK",
+      "column": "RecordedByID",
+      "ordinal": 3,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "HALL_BLOCK",
+      "column": "BlockStart",
+      "ordinal": 4,
+      "type": "datetime",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "HALL_BLOCK",
+      "column": "BlockEnd",
+      "ordinal": 5,
+      "type": "datetime",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "HALL_BLOCK",
+      "column": "Reason",
+      "ordinal": 6,
+      "type": "varchar(255)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "HALL_BLOCK",
+      "column": "BlockStatus",
+      "ordinal": 7,
+      "type": "enum('Active','Cancelled')",
+      "nullable": "NO",
+      "default": "Active",
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "HALL_FACILITY",
+      "column": "HallID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "PRI"
+    },
+    {
+      "table": "HALL_FACILITY",
+      "column": "FacilityID",
+      "ordinal": 2,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "PRI"
+    },
+    {
+      "table": "HALL_FACILITY",
+      "column": "Quantity",
+      "ordinal": 3,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "HALL_FACILITY",
+      "column": "WorkingQuantity",
+      "ordinal": 4,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "LECTURE_HALL",
+      "column": "HallID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "auto_increment",
+      "key": "PRI"
+    },
+    {
+      "table": "LECTURE_HALL",
+      "column": "BuildingID",
+      "ordinal": 2,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "LECTURE_HALL",
+      "column": "HallNo",
+      "ordinal": 3,
+      "type": "varchar(20)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "LECTURE_HALL",
+      "column": "Floor",
+      "ordinal": 4,
+      "type": "varchar(10)",
+      "nullable": "YES",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "LECTURE_HALL",
+      "column": "Capacity",
+      "ordinal": 5,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "LECTURE_HALL",
+      "column": "OperationalStatus",
+      "ordinal": 6,
+      "type": "enum('Active','Inactive')",
+      "nullable": "NO",
+      "default": "Active",
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "STUDENT_GROUP",
+      "column": "GroupID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "auto_increment",
+      "key": "PRI"
+    },
+    {
+      "table": "STUDENT_GROUP",
+      "column": "DepartmentID",
+      "ordinal": 2,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "STUDENT_GROUP",
+      "column": "GroupName",
+      "ordinal": 3,
+      "type": "varchar(100)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "STUDENT_GROUP",
+      "column": "IntakeYear",
+      "ordinal": 4,
+      "type": "smallint unsigned",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "STUDENT_GROUP",
+      "column": "StudyYear",
+      "ordinal": 5,
+      "type": "tinyint unsigned",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "column": "AccountID",
+      "ordinal": 1,
+      "type": "int",
+      "nullable": "NO",
+      "default": null,
+      "extra": "auto_increment",
+      "key": "PRI"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "column": "DepartmentID",
+      "ordinal": 2,
+      "type": "int",
+      "nullable": "YES",
+      "default": null,
+      "extra": "",
+      "key": "MUL"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "column": "FullName",
+      "ordinal": 3,
+      "type": "varchar(150)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "column": "Email",
+      "ordinal": 4,
+      "type": "varchar(254)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "UNI"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "column": "Username",
+      "ordinal": 5,
+      "type": "varchar(50)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": "UNI"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "column": "PasswordHash",
+      "ordinal": 6,
+      "type": "varchar(255)",
+      "nullable": "NO",
+      "default": null,
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "column": "Role",
+      "ordinal": 7,
+      "type": "enum('Student','Lecturer','AdminStaff')",
+      "nullable": "NO",
+      "default": "Student",
+      "extra": "",
+      "key": ""
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "column": "IsActive",
+      "ordinal": 8,
+      "type": "tinyint(1)",
+      "nullable": "NO",
+      "default": "1",
+      "extra": "",
+      "key": ""
+    }
+  ],
+  "foreign_keys": [
+    {
+      "table": "BOOKING",
+      "column": "CourseID",
+      "parent": "COURSE_UNIT",
+      "parent_column": "CourseID"
+    },
+    {
+      "table": "BOOKING",
+      "column": "HallID",
+      "parent": "LECTURE_HALL",
+      "parent_column": "HallID"
+    },
+    {
+      "table": "BOOKING",
+      "column": "RequesterID",
+      "parent": "USER_ACCOUNT",
+      "parent_column": "AccountID"
+    },
+    {
+      "table": "BOOKING",
+      "column": "ReviewerID",
+      "parent": "USER_ACCOUNT",
+      "parent_column": "AccountID"
+    },
+    {
+      "table": "BOOKING_GROUP",
+      "column": "BookingID",
+      "parent": "BOOKING",
+      "parent_column": "BookingID"
+    },
+    {
+      "table": "BOOKING_GROUP",
+      "column": "GroupID",
+      "parent": "STUDENT_GROUP",
+      "parent_column": "GroupID"
+    },
+    {
+      "table": "COURSE_UNIT",
+      "column": "DepartmentID",
+      "parent": "DEPARTMENT",
+      "parent_column": "DepartmentID"
+    },
+    {
+      "table": "HALL_BLOCK",
+      "column": "HallID",
+      "parent": "LECTURE_HALL",
+      "parent_column": "HallID"
+    },
+    {
+      "table": "HALL_BLOCK",
+      "column": "RecordedByID",
+      "parent": "USER_ACCOUNT",
+      "parent_column": "AccountID"
+    },
+    {
+      "table": "HALL_FACILITY",
+      "column": "FacilityID",
+      "parent": "FACILITY",
+      "parent_column": "FacilityID"
+    },
+    {
+      "table": "HALL_FACILITY",
+      "column": "HallID",
+      "parent": "LECTURE_HALL",
+      "parent_column": "HallID"
+    },
+    {
+      "table": "LECTURE_HALL",
+      "column": "BuildingID",
+      "parent": "BUILDING",
+      "parent_column": "BuildingID"
+    },
+    {
+      "table": "STUDENT_GROUP",
+      "column": "DepartmentID",
+      "parent": "DEPARTMENT",
+      "parent_column": "DepartmentID"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "column": "DepartmentID",
+      "parent": "DEPARTMENT",
+      "parent_column": "DepartmentID"
+    }
+  ],
+  "constraints": [
+    {
+      "table": "BOOKING",
+      "name": "ck_booking_attendance",
+      "clause": "(`ExpectedAttendance` > 0)"
+    },
+    {
+      "table": "BOOKING",
+      "name": "ck_booking_clock",
+      "clause": "((`StartTime` >= _utf8mb4\\'00:00:00\\') and (`StartTime` < _utf8mb4\\'24:00:00\\') and (`EndTime` >= _utf8mb4\\'00:00:00\\') and (`EndTime` < _utf8mb4\\'24:00:00\\') and (`EndTime` > `StartTime`))"
+    },
+    {
+      "table": "BOOKING",
+      "name": "ck_booking_course",
+      "clause": "((`BookingType` not in (_utf8mb4\\'Lecture\\',_utf8mb4\\'Tutorial\\')) or (`CourseID` is not null))"
+    },
+    {
+      "table": "BOOKING",
+      "name": "ck_booking_no_self_review",
+      "clause": "((`ReviewerID` is null) or (`ReviewerID` <> `RequesterID`))"
+    },
+    {
+      "table": "BOOKING",
+      "name": "ck_booking_purpose",
+      "clause": "(char_length(trim(`Purpose`)) > 0)"
+    },
+    {
+      "table": "BOOKING",
+      "name": "ck_booking_review_bundle",
+      "clause": "(((`ReviewerID` is null) and (`Decision` is null) and (`ReviewedAt` is null) and (`ReviewNote` is null)) or ((`ReviewerID` is not null) and (`Decision` is not null) and (`ReviewedAt` is not null)))"
+    },
+    {
+      "table": "BOOKING",
+      "name": "ck_booking_review_state",
+      "clause": "(((`BookingStatus` = _utf8mb4\\'Pending\\') and (`ReviewerID` is null)) or ((`BookingStatus` in (_utf8mb4\\'Approved\\',_utf8mb4\\'Completed\\')) and (`ReviewerID` is not null) and (`Decision` = _utf8mb4\\'Approved\\')) or ((`BookingStatus` = _utf8mb4\\'Rejected\\') and (`ReviewerID` is not null) and (`Decision` = _utf8mb4\\'Rejected\\')) or ((`BookingStatus` = _utf8mb4\\'Cancelled\\') and ((`ReviewerID` is null) or (`Decision` = _utf8mb4\\'Approved\\'))))"
+    },
+    {
+      "table": "BOOKING",
+      "name": "ck_booking_review_time",
+      "clause": "((`ReviewedAt` is null) or (`ReviewedAt` >= `RequestedAt`))"
+    },
+    {
+      "table": "BUILDING",
+      "name": "ck_building_buildingcode",
+      "clause": "(char_length(trim(`BuildingCode`)) > 0)"
+    },
+    {
+      "table": "BUILDING",
+      "name": "ck_building_buildingname",
+      "clause": "(char_length(trim(`BuildingName`)) > 0)"
+    },
+    {
+      "table": "COURSE_UNIT",
+      "name": "ck_course_unit_coursecode",
+      "clause": "(char_length(trim(`CourseCode`)) > 0)"
+    },
+    {
+      "table": "COURSE_UNIT",
+      "name": "ck_course_unit_coursetitle",
+      "clause": "(char_length(trim(`CourseTitle`)) > 0)"
+    },
+    {
+      "table": "DEPARTMENT",
+      "name": "ck_department_departmentname",
+      "clause": "(char_length(trim(`DepartmentName`)) > 0)"
+    },
+    {
+      "table": "FACILITY",
+      "name": "ck_facility_facilityname",
+      "clause": "(char_length(trim(`FacilityName`)) > 0)"
+    },
+    {
+      "table": "HALL_BLOCK",
+      "name": "ck_hall_block_interval",
+      "clause": "(`BlockEnd` > `BlockStart`)"
+    },
+    {
+      "table": "HALL_BLOCK",
+      "name": "ck_hall_block_reason",
+      "clause": "(char_length(trim(`Reason`)) > 0)"
+    },
+    {
+      "table": "HALL_FACILITY",
+      "name": "ck_hall_facility_total",
+      "clause": "(`Quantity` > 0)"
+    },
+    {
+      "table": "HALL_FACILITY",
+      "name": "ck_hall_facility_working",
+      "clause": "((`WorkingQuantity` >= 0) and (`WorkingQuantity` <= `Quantity`))"
+    },
+    {
+      "table": "LECTURE_HALL",
+      "name": "ck_lecture_hall_capacity",
+      "clause": "(`Capacity` > 0)"
+    },
+    {
+      "table": "LECTURE_HALL",
+      "name": "ck_lecture_hall_hallno",
+      "clause": "(char_length(trim(`HallNo`)) > 0)"
+    },
+    {
+      "table": "STUDENT_GROUP",
+      "name": "ck_student_group_groupname",
+      "clause": "(char_length(trim(`GroupName`)) > 0)"
+    },
+    {
+      "table": "STUDENT_GROUP",
+      "name": "ck_student_group_intake",
+      "clause": "(`IntakeYear` between 1900 and 9999)"
+    },
+    {
+      "table": "STUDENT_GROUP",
+      "name": "ck_student_group_level",
+      "clause": "(`StudyYear` >= 1)"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "name": "ck_user_account_active",
+      "clause": "(`IsActive` in (0,1))"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "name": "ck_user_account_email",
+      "clause": "(char_length(trim(`Email`)) > 0)"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "name": "ck_user_account_fullname",
+      "clause": "(char_length(trim(`FullName`)) > 0)"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "name": "ck_user_account_passwordhash",
+      "clause": "(char_length(trim(`PasswordHash`)) > 0)"
+    },
+    {
+      "table": "USER_ACCOUNT",
+      "name": "ck_user_account_username",
+      "clause": "(char_length(trim(`Username`)) > 0)"
+    }
+  ]
+}
