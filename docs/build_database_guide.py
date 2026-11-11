@@ -412,7 +412,36 @@ p('A booking service coordinates authenticated actions. A repository calls the s
 p('Encapsulation protects object state, abstraction gives a clear repository contract, and polymorphism allows a test implementation of that contract. Use inheritance only for a justified is-a relationship. The database remains the authority for concurrent reservation decisions.')
 p('Your first application connection lesson will create a dedicated database login with a private password, assign hallsync_application, configure the timezone/encoding and test one read. No password belongs in a public repository.')
 
-heading('30. Technical references')
+heading('30. SQL vocabulary used in these scripts')
+table(['Keyword / expression','What it means here'],[
+['CREATE TABLE / DDL','Defines stored structure. DDL is not the same as inserting department or booking records.'],
+['INSERT / UPDATE / DELETE','Change rows. Deleting a Pending booking group set during an edit is distinct from deleting booking history.'],
+['PROCEDURE / CALL','A stored operation with parameters; CALL invokes it. Public procedures are the application entry points.'],
+['IN / OUT parameters','IN supplies a value. OUT returns a generated identifier through a caller variable.'],
+['DECLARE versus @variable','DECLARE creates a local routine variable. An @variable belongs to one client connection.'],
+['LAST_INSERT_ID()','Returns that connection generated ID; using MAX(ID) instead could select another user row.'],
+['IF / EXISTS / SELECT 1','Conditional checks. EXISTS asks whether any matching row exists, without needing all its columns.'],
+['TRIM / CHAR_LENGTH','Evaluate text after removing outer ordinary spaces, and count characters rather than bytes.'],
+['FLOOR','Checks that attendance has no fractional part before storing an integer.'],
+['JSON_ARRAY / JSON_TABLE','Send several group IDs in one input, then turn them into rows. Group links are stored relationally.'],
+['JSON_ARRAYAGG / COALESCE','Collect existing group IDs for revalidation; substitute an empty array when none exist.'],
+['SIGNAL SQLSTATE 45000','Raise a controlled business-rule rejection with a useful message.'],
+['EXIT HANDLER / RESIGNAL','On a SQL exception, roll back this procedure transaction and propagate the original error.'],
+['START TRANSACTION / COMMIT','Begin one atomic business operation and make its successful changes permanent.'],
+['ROLLBACK','Undo this transaction changes after failure. It does not undo an entire earlier DDL installation.'],
+['FOR UPDATE / FOR SHARE','Take row locks. Hall writes coordinate with FOR UPDATE; account checks hold a shared read lock.'],
+['READ COMMITTED','Each new consistent read sees the latest committed data, including after a hall-lock wait.'],
+['ON DUPLICATE KEY UPDATE','Update the existing hall/facility pair when its composite key already exists.'],
+['JOIN / LEFT JOIN','Require a matching parent or retain a row when optional course/reviewer data is absent.'],
+['SQL SECURITY DEFINER','Execute the stored operation using its installer privileges; the caller still needs EXECUTE permission.'],
+['GRANT / MySQL role','Control database-login privileges. This is separate from USER_ACCOUNT.Role for application users.'],
+['DELIMITER','A Workbench/client directive for sending a complete procedure body containing internal semicolons.']
+],[169,338])
+p('The controller must still authenticate a human user. SQL SECURITY DEFINER and a MySQL role do not turn a caller-supplied actor ID into proof of identity.')
+p('Database CHECK expressions use SQL NULL semantics. Required columns and explicit IS NULL / IS NOT NULL review-bundle checks are necessary to express the intended rules.')
+p('MySQL TIME can also represent durations beyond one day. The booking clock CHECK narrows it to the same-day interval supported by this project.')
+
+heading('31. Technical references')
 refs=[
 ('MySQL CREATE TABLE and CHECK constraints','https://dev.mysql.com/doc/refman/8.0/en/create-table-check-constraints.html'),
 ('MySQL foreign keys','https://dev.mysql.com/doc/refman/8.0/en/create-table-foreign-keys.html'),
@@ -452,6 +481,7 @@ doc.build(story,onFirstPage=page,onLaterPages=page)
 reader=PdfReader(pdf)
 text='\n'.join(p.extract_text() or '' for p in reader.pages)
 assert len(reader.pages)>=25 and all(t in text for t in order)
+assert all(c['column'] in text for c in data['columns'])
 assert 'RequesterID' in text and 'WorkingQuantity' in text and '28' in text
 assert '/JavaScript' not in pdf.read_bytes().decode('latin1')
 print('GUIDE BUILT',len(reader.pages),'pages',pdf.stat().st_size,'bytes')
