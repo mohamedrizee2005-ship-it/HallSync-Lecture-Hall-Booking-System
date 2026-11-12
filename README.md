@@ -1,78 +1,77 @@
-# HallSync - Lecture Hall Booking System
+# HallSync
 
-A working **Java desktop + MySQL** university-project prototype for the Faculty of Science, University of Kelaniya. It uses Java OOP with separate classes. You can download the whole project and study it one workflow at a time.
+Lecture hall booking management system for the Faculty of Science, University of Kelaniya.
 
-## What is complete
+Java Swing desktop application with a MySQL database.
 
-| User | Available features |
-| --- | --- |
-| Student | Register, sign in, find available halls, view equipment and the approved timetable. |
-| Lecturer | Student viewing features, plus own booking requests, Pending edits and future cancellation. |
-| Administrator | Bookings and independent approvals/rejections, completion, hall blocks, equipment, reference data, account provisioning/filtering and reports/CSV. |
+## Features
 
-The database includes 11 tables, 4 views and 27 procedures. Approval prevents conflicting reservations inside a transaction. History is retained. An administrator cannot review their own booking.
+- Account authentication and student registration.
+- Hall availability, equipment details and timetable viewing.
+- Lecturer booking requests, Pending edits and cancellation.
+- Independent approval/rejection and booking completion.
+- Hall maintenance blocks, capacity/status management and equipment quantities.
+- Department, building, course and student-group management.
+- Administrator account provisioning and department filtering.
+- Booking, equipment and hall-usage reports with CSV export.
 
-## Run your existing project
+## Requirements
 
-You already installed Java, Maven and MySQL and connected successfully. Keep them.
+- JDK 17 or newer and Apache Maven.
+- MySQL 8.0.46; MySQL Workbench for database administration.
+- Windows for `run_hallsync.cmd`. The Maven application also runs on other Java desktop platforms.
 
-1. On this page choose **Code > Download ZIP**, then extract the ZIP.
-2. Copy your working `application/db.local.properties` from the earlier project into the new `application` folder. If you do not copy it, the new first-connection form can test and save your existing MySQL login details.
-3. If you have not already applied it, run [application/03_upgrade_desktop_reads.sql](application/03_upgrade_desktop_reads.sql) with your Workbench administrator connection. It preserves data and can repeat. **Do not drop your database or rerun the full installer.**
-4. Double-click **run_hallsync.cmd**. It checks for Java/Maven, builds, then opens HallSync.
-5. Sign in with your **HallSync application account**. This is different from the MySQL connection login `hallsync_app`. If you have not created a usable administrator yet, follow [application/README.md](application/README.md#first-application-administrator).
+## Installation
 
-To use VS Code: **File > Open Folder**, select the whole repository folder, install **Extension Pack for Java**, then choose **Run and Debug > HallSync: Full desktop application > F5**. You do not need to copy Java classes individually.
+1. Extract the project archive.
+2. In MySQL Workbench, run [database/HallSync_Full_Setup.sql](database/HallSync_Full_Setup.sql) once for a new database.
+3. Run [database/Create_Application_Login.sql](database/Create_Application_Login.sql) once and retain the generated connection password privately.
+4. Start **run_hallsync.cmd**. The first-connection form tests and saves the limited MySQL login locally.
+5. Configure an application administrator as described below, then sign in.
 
-## First installation on another laptop
+For an existing database, preserve `application/db.local.properties` and run [database/Upgrade_Desktop_Reads.sql](database/Upgrade_Desktop_Reads.sql) only if its two read procedures are missing. The upgrade preserves data. Do not rerun the full installer on an installed schema.
 
-| Order | Do this once |
-| --- | --- |
-| 1 | Install a JDK, Maven and MySQL 8.0.46. JDK 17+ is supported; CI checks JDK 21 and 26. |
-| 2 | In Workbench run [database/HallSync_Full_Setup.sql](database/HallSync_Full_Setup.sql). It is the **only full database installer**. |
-| 3 | Run [application/01_create_application_login.sql](application/01_create_application_login.sql). Keep its generated MySQL password private. |
-| 4 | Start `run_hallsync.cmd`. Enter that limited login in the first-connection form and click **Test and save connection**. |
-| 5 | Follow the application README to create the first usable HallSync administrator, then sign in. |
+## Administrator account
 
-The first-connection form writes only a new local settings file. It does not install/reset the database, create accounts or overwrite an existing working file.
+The MySQL connection login and HallSync application accounts are separate. Initial seed account passwords are unavailable.
 
-## Simple project map
+From the `application` directory:
 
-| Location | Purpose |
-| --- | --- |
-| `run_hallsync.cmd` | Start here on Windows. |
-| `database/HallSync_Full_Setup.sql` | Complete SQL, with eight numbered study sections. |
-| `database/01_...sql` to `10_...sql` | Smaller reference components for studying SQL; not extra installation steps. |
-| `application/src/main/java/lk/ac/kln/hallsync/` | All production Java source, grouped by responsibility. |
-| `application/pom.xml` | Maven dependencies and build settings. |
-| `.vscode/` | Editor build/run settings. |
-| `.github/workflows/` | Automated checks on disposable test databases. |
+```cmd
+mvn clean package
+java -cp target/hallsync.jar lk.ac.kln.hallsync.auth.AdminPasswordTool
+```
 
-## Study in this order
+Choose a private application password. Copy `database/Create_Project_Admin.example.sql` to `database/Create_Project_Admin.local.sql`, insert the generated Argon2id hash privately, and execute that local file once using the Workbench administrator connection. Sign in as `project_admin` with the chosen application password. Existing usable application administrators can skip initialization.
 
-All Java paths below start inside `application/src/main/java/lk/ac/kln/hallsync/`.
+Administrators provision lecturer/staff accounts through **Accounts**. Public registration creates Student accounts. Booking decisions require an administrator other than the requester.
 
-| Step | Read | Understand |
-| --- | --- | --- |
-| 1 | `database/HallSync_Full_Setup.sql`, sections 1-3 | Tables, attributes, primary/foreign keys and constraints. |
-| 2 | `model/Department.java` | A small object with private fields and getters. |
-| 3 | `DatabaseConfig.java`, `DatabaseConnectionFactory.java` | Private settings and a JDBC connection. |
-| 4 | `repository/DepartmentRepository.java`, `JdbcDepartmentRepository.java` | An interface, its implementation and bound SQL. |
-| 5 | `service/DepartmentService.java` | Input validation and administrator permission. |
-| 6 | `HallSyncApp.java`, `ApplicationServices.java`, `desktop/LoginDialog.java` | Start-up, object composition and sign-in. |
-| 7 | `desktop/BookingEditor.java` > `service/BookingService.java` > `repository/JdbcBookingRepository.java` > SQL section 4 | One full booking flow across all layers. |
-| 8 | `desktop/BookingsPanel.java` and `sp_review_booking` | Approval, self-review prevention, overlap and transactions. |
-| 9 | `CatalogService`, `HallBlockService`, `AccountService`, `ReportService` | Remaining features, one service at a time. |
-| 10 | SQL sections 5-8 and the test classes | Views, demo data, limited privileges and verification. |
+## Run
 
-Models carry data. Services apply rules. Repositories talk to MySQL. Screens collect input and display results. Each class remains in its own file so your group can explain its responsibility.
+Windows: **run_hallsync.cmd**.
 
-## Scope and checks
+From the `application` directory:
 
-This completes the agreed **local desktop v1**. Recurring booking series, automatic timetable generation, individual student enrolment, multi-stage approvals, public hosting and password recovery are outside it. Public deployment would require a trusted server-side boundary for shared database access. Synthetic demo data is not an official university timetable.
+```cmd
+mvn clean package
+java -jar target/hallsync.jar
+```
 
-GitHub Actions checks the actual Maven build, authentication, catalogues, booking workflows, concurrent approvals, first-connection setup and real Swing navigation on JDK 21/26 against disposable MySQL 8.0.46. The separate database suite checks constraints and workflows. No test resets your laptop database.
+VS Code: open the repository root and select **HallSync: Full desktop application**.
+NetBeans: open the `application` Maven project; the main class is `lk.ac.kln.hallsync.HallSyncApp`.
 
-This runs as a desktop window; no webpage or web server is needed. A project webpage can link to this repository/download. The application itself is not hosted in a browser.
+Connection diagnostics:
 
-Keep passwords, `db.local.properties`, `*.local.sql` and build output private. Study PDFs remain separate from GitHub.
+```cmd
+java -cp target/hallsync.jar lk.ac.kln.hallsync.ConnectionCheck
+```
+
+## Database and verification
+
+The schema contains 11 tables, 4 reporting views and 27 procedures. Times use Asia/Colombo. Approval and maintenance operations coordinate through hall-row locks. Pending requests do not reserve halls; historical terminal records are retained.
+
+[database/Verify_Database.sql](database/Verify_Database.sql) performs read-only structural and integrity checks. GitHub Actions builds on JDK 21/26 and runs JDBC, Swing and database checks against disposable MySQL instances.
+
+Seed records are synthetic. Existing timetable reservations must be entered before using availability for live operations. This deployment uses trusted local database access; a public client deployment requires a server-side boundary.
+
+Local connection settings, passwords and `*.local.sql` files must remain private.

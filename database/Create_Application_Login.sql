@@ -1,4 +1,4 @@
--- Application connection lesson: run ONCE using your local administrator.
+-- Application database login: run ONCE using your local administrator.
 -- Prerequisite: HallSync_Full_Setup.sql completed successfully.
 -- Enable Stop Script Execution On Errors in Workbench.
 -- The CREATE USER result includes a PRIVATE generated password.

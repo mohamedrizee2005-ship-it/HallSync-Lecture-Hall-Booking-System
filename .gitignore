@@ -8,3 +8,5 @@ __pycache__/
 application/target/
 application/db.local.properties
 application/*.local.sql
+database/*.local.sql
+database/tests/database_validation.json

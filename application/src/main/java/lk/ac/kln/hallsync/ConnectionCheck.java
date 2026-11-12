@@ -11,13 +11,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/** First application lesson: connect and read; no booking changes. */
+/** Reports the database session, encrypted transport and catalogue read access. */
 public final class ConnectionCheck {
     private ConnectionCheck() { }
 
     public static void main(String[] args) {
         if (args.length > 1) {
-            System.err.println("Usage: java -jar hallsync-connection-check.jar [config-file]");
+            System.err.println("Usage: java -cp hallsync.jar lk.ac.kln.hallsync.ConnectionCheck [config-file]");
             System.exit(1);
         }
         try {
@@ -41,7 +41,7 @@ public final class ConnectionCheck {
             // Codes are useful for troubleshooting without exposing credentials.
             System.err.printf("MySQL connection/read failed (SQLState=%s, code=%d).%n",
                     error.getSQLState(), error.getErrorCode());
-            System.err.println("See application/README.md for connection troubleshooting.");
+            System.err.println("See the project README for database connection settings.");
             System.exit(1);
         }
     }

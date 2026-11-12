@@ -1,5 +1,5 @@
 -- ONE-TIME LOCAL INITIALIZATION. Run with your Workbench administrator connection.
--- Copy to 02_provision_project_admin.local.sql before adding the private hash.
+-- Copy to Create_Project_Admin.local.sql before adding the private hash.
 -- Generate that hash with AdminPasswordTool; keep the template in GitHub unchanged.
 -- Existing full database setup and its synthetic administrator records are required.
 -- Enable Stop Script Execution On Errors. Execute only this setup section once.

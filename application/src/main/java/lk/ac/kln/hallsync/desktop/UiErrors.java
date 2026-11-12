@@ -13,7 +13,7 @@ public final class UiErrors {
                 case 1062 -> "That unique code, email, username or group identity already exists. Check the existing records.";
                 case 1045 -> "The MySQL connection login was rejected. Check your private db.local.properties.";
                 case 1142,1370 -> "The database login lacks the required permission. Check the hallsync_application role and the desktop read upgrade.";
-                case 1305 -> "A required database procedure is missing. For an existing database, run application/03_upgrade_desktop_reads.sql in Workbench.";
+                case 1305 -> "A required database procedure is missing. For an existing database, run database/Upgrade_Desktop_Reads.sql in Workbench.";
                 case 1452 -> "A selected department, hall, course, facility or group no longer exists. Reload your choices.";
                 case 1205,1213 -> "Another transaction changed these records. Reload and retry the action.";
                 default -> "45000".equals(sql.getSQLState()) ? sql.getMessage() : "Database operation failed (state " + sql.getSQLState() + ", code " + sql.getErrorCode() + ").";

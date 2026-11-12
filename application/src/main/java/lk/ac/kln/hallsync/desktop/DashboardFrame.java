@@ -22,7 +22,7 @@ public final class DashboardFrame extends JFrame {
             tabs.addTab("Accounts",new AccountsPanel(app,user)); tabs.addTab("Reports",new ReportsPanel(app,user));
         }
         tabs.addChangeListener(e -> refreshSelected()); add(tabs);
-        JLabel footer=new JLabel("University of Kelaniya project prototype | Pending requests do not reserve halls | Refresh to see current data");
+        JLabel footer=new JLabel("HallSync | Asia/Colombo | Refresh to load the latest reservations");
         footer.setBorder(BorderFactory.createEmptyBorder(10,20,10,20)); add(footer,BorderLayout.SOUTH);
         logout.addActionListener(e -> { if (UiErrors.confirm(this,"Sign out of HallSync?")) { dispose(); signedOut.run(); } });
         setDefaultCloseOperation(DISPOSE_ON_CLOSE); setMinimumSize(new Dimension(1000,650));

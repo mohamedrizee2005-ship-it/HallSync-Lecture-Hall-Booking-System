@@ -9,10 +9,10 @@ if errorlevel 1 goto missing_java
 where /q mvn
 if errorlevel 1 goto missing_maven
 echo Building HallSync. The first build needs internet access for Maven dependencies.
-call mvn -B -ntp package
+call mvn -B -ntp clean package
 if errorlevel 1 goto build_failed
 echo Opening HallSync. Keep your database passwords private.
-java -cp "target\hallsync-connection-check.jar" lk.ac.kln.hallsync.HallSyncApp
+java -jar "target\hallsync.jar"
 if errorlevel 1 goto app_failed
 exit /b 0
 

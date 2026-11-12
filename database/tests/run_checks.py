@@ -56,17 +56,6 @@ def install(c,text,schema,role):
         try:query(c,command)
         except Exception:
             print('FAILED SQL:',command[:500],flush=True);raise
-def prepare_seed():
-    p=ROOT/'07_demo_data.sql';s=p.read_text()
-    if '-- CI_ACCOUNT_ROWS' in s:
-        ph=PasswordHasher(time_cost=2,memory_cost=19456,parallelism=1)
-        rows=[]
-        for username,name,role in [('demo_admin_a','Demo Administrator A','AdminStaff'),
-          ('demo_admin_b','Demo Administrator B','AdminStaff'),
-          ('demo_lecturer','Demo Lecturer','Lecturer'),('demo_student','Demo Student','Student')]:
-            encoded=ph.hash(secrets.token_urlsafe(48))
-            rows.append("INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'%s','%s@example.invalid','%s','%s','%s' WHERE NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='%s');"%(name,username,username,encoded,role,username))
-        s=s.replace('-- CI_ACCOUNT_ROWS','\n'.join(rows));p.write_text(s)
 def metadata(c,db):
     cols=query(c,"SELECT TABLE_NAME,COLUMN_NAME,ORDINAL_POSITION,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT,EXTRA,COLUMN_KEY FROM information_schema.columns WHERE table_schema=%s AND table_name IN (SELECT table_name FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE') ORDER BY TABLE_NAME,ORDINAL_POSITION",(db,db))
     columns=[dict(zip(['table','column','ordinal','type','nullable','default','extra','key'],r)) for r in cols]
@@ -75,12 +64,14 @@ def metadata(c,db):
     return dict(columns=columns,foreign_keys=[dict(zip(['table','column','parent','parent_column'],r)) for r in fks],
       constraints=[dict(zip(['table','name','clause'],r)) for r in constraints])
 def main():
-    prepare_seed();REPORT_DIR.mkdir(exist_ok=True)
+    REPORT_DIR.mkdir(exist_ok=True)
+    installer=(ROOT/'HallSync_Full_Setup.sql').read_text()
+    initial_schema=installer.split('-- SECTION 3:',1)[0]
+    seed='-- SECTION 6:'+installer.split('-- SECTION 6:',1)[1].split('-- SECTION 7:',1)[0]
     suffix=uuid.uuid4().hex[:10];db='hallsync_validation_'+suffix;role='hs_app_'+suffix
     c=connect();created=[];roles=[];api_user=None
     try:
-        for n in ['01_create_database.sql','02_create_department.sql']:
-            install(c,(ROOT/n).read_text(),db,role)
+        install(c,initial_schema,db,role)
         created.append(db)
         query(c,"INSERT INTO DEPARTMENT(DepartmentName) VALUES('Industrial Management')")
         install(c,(ROOT/'HallSync_Full_Setup.sql').read_text(),db,role);roles.append(role)
@@ -93,7 +84,7 @@ def main():
         ok('4 views',scalar(c,"SELECT COUNT(*) FROM information_schema.views WHERE table_schema=%s",(db,))==4)
         ok('27 procedures',scalar(c,"SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=%s",(db,))==27)
         initial_users=scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')
-        install(c,(ROOT/'07_demo_data.sql').read_text(),db,role)
+        install(c,seed,db,role)
         ok('Demo seed can repeat without duplicate accounts',scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')==initial_users)
         a=scalar(c,"SELECT AccountID FROM USER_ACCOUNT WHERE Username='demo_admin_a'")
         b=scalar(c,"SELECT AccountID FROM USER_ACCOUNT WHERE Username='demo_admin_b'")

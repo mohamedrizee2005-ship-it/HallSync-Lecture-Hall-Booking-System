@@ -12,18 +12,6 @@
 -- If other tables already exist, the preflight stops for inspection.
 -- Demo account hashes have random discarded passwords, not usable login passwords.
 --
--- STUDY THIS FILE FROM TOP TO BOTTOM:
---   Section 1: Create/select the database (UTF-8 character set and collation).
---   Section 2: Department, the first parent table.
---   Section 3: Preflight, other tables, primary keys, foreign keys and CHECKs.
---   Section 4: Procedures: validation, transactions, ownership and booking locks.
---   Section 5: Views: computed reports rather than duplicate stored report rows.
---   Section 6: Synthetic demonstration data (not the university timetable).
---   Section 7: Restricted application role and grants.
---   Section 8: Read-only verification queries and expected object counts.
--- Reference components are in the numbered SQL files. Do not run them as extra
--- installation steps after this complete installer.
-
 -- SECTION 1: CREATE / SELECT THE DATABASE
 CREATE DATABASE IF NOT EXISTS hallsync_db
     CHARACTER SET utf8mb4

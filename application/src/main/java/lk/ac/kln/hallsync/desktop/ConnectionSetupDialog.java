@@ -14,7 +14,7 @@ public final class ConnectionSetupDialog extends JDialog {
     public ConnectionSetupDialog(Path file) {
         super((Frame)null,"HallSync - First connection",true);
         FormPanel form=new FormPanel();
-        form.field("Before starting",new JLabel("Install the database and create the limited login using the README steps."));
+        form.field("Before starting",new JLabel("Install the HallSync database and configure its application login first."));
         JTextField url=form.text("MySQL JDBC address","jdbc:mysql://127.0.0.1:3306/hallsync_db");
         JTextField username=form.text("MySQL connection username","hallsync_app");
         JPasswordField password=form.field("Private MySQL password",new JPasswordField(28));

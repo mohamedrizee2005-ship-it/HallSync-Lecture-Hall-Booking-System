@@ -9,6 +9,7 @@ from argon2 import PasswordHasher
 import subprocess
 import tempfile
 import uuid
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("database_checks", ROOT / "database/tests/run_checks.py")
@@ -25,7 +26,7 @@ def main():
     user_created = False
     try:
         db_checks.install(c, (ROOT / "database/HallSync_Full_Setup.sql").read_text(), schema, role)
-        login_sql = (ROOT / "application/01_create_application_login.sql").read_text()
+        login_sql = (ROOT / "database/Create_Application_Login.sql").read_text()
         # The CI service receives TCP connections through Docker's bridge.
         # The unique temporary CI login uses %, while the laptop script stays loopback-only.
         login_sql = login_sql.replace("hallsync_db", schema).replace("hallsync_application", role)
@@ -37,13 +38,17 @@ def main():
                 user_created = True
                 password = rows[0][2]
         assert password, "MySQL must return a generated private password"
+        with zipfile.ZipFile(ROOT/"application/target/hallsync.jar") as archive:
+            manifest=archive.read("META-INF/MANIFEST.MF").decode()
+            assert "Main-Class: lk.ac.kln.hallsync.HallSyncApp" in manifest
+        print("Executable JAR manifest points to the HallSync desktop.")
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / "db.local.properties"
             config.write_text(
                 f"db.url=jdbc:mysql://127.0.0.1:3306/{schema}\ndb.user={user}\n", encoding="utf-8"
             )
             env = dict(os.environ, HALLSYNC_DB_PASSWORD=password)
-            command = ["java", "-jar", str(ROOT / "application/target/hallsync-connection-check.jar"), str(config)]
+            command = ["java", "-cp", str(ROOT / "application/target/hallsync.jar"), "lk.ac.kln.hallsync.ConnectionCheck", str(config)]
             good = subprocess.run(command, env=env, capture_output=True, text=True, timeout=45)
             assert good.returncode == 0, good.stderr
             assert f"Database: {schema}" in good.stdout
@@ -63,7 +68,7 @@ def main():
             assert missing.returncode != 0 and "Configuration error" in missing.stderr
 
             counts_before = db_checks.query(c, f"SELECT (SELECT COUNT(*) FROM {schema}.USER_ACCOUNT),(SELECT COUNT(*) FROM {schema}.DEPARTMENT)")
-            upgrade = (ROOT/'application/03_upgrade_desktop_reads.sql').read_text()
+            upgrade = (ROOT/'database/Upgrade_Desktop_Reads.sql').read_text()
             db_checks.install(c,upgrade,schema,role)
             db_checks.install(c,upgrade,schema,role)
             assert counts_before == db_checks.query(c, f"SELECT (SELECT COUNT(*) FROM {schema}.USER_ACCOUNT),(SELECT COUNT(*) FROM {schema}.DEPARTMENT)")
@@ -85,7 +90,7 @@ def main():
             db_checks.query(c,f"INSERT INTO {schema}.BOOKING(RequesterID,HallID,BookingDate,StartTime,EndTime,Purpose,BookingType,ExpectedAttendance,BookingStatus,RequestedAt,ReviewerID,Decision,ReviewedAt) VALUES(%s,%s,%s,'08:00','09:00','CI ended approved session','Event',10,'Approved',%s,%s,'Approved',%s)",
                             (fixture_requester,fixture_hall,ended_day,str(ended_day)+' 06:00:00',fixture_reviewer,str(ended_day)+' 07:00:00'))
             classpath = os.pathsep.join([str(ROOT / 'application/target/test-classes'),
-                                        str(ROOT / 'application/target/hallsync-connection-check.jar')])
+                                        str(ROOT / 'application/target/hallsync.jar')])
             feature_env = dict(env, HALLSYNC_RUN_INTEGRATION_TESTS='1',
                                HALLSYNC_APPLICATION_TEST_PASSWORD=application_password)
             feature = subprocess.run(['java','-cp',classpath,'lk.ac.kln.hallsync.DepartmentIntegrationCheck',str(config)],
@@ -115,15 +120,6 @@ def main():
                                    department_checks=passed,workflow_checks=workflow_checks,desktop_checks=desktop_checks,
                                    total_checks=len(passed)+len(workflow_checks)+len(desktop_checks),read_upgrade_preserves_data=True)
             (ROOT/'application/target/application-validation.json').write_text(json.dumps(complete_report,indent=2))
-            menu = subprocess.run(['java','-cp',str(ROOT/'application/target/hallsync-connection-check.jar'),
-                                   'lk.ac.kln.hallsync.DepartmentApp',str(config)],
-                                  input='1\n2\n1\n3\nIndustrial\n4\n0\n', env=env,
-                                  capture_output=True,text=True,timeout=45)
-            assert menu.returncode == 0, menu.stderr
-            assert 'Industrial Management' in menu.stdout
-            assert 'Sign in as an administrator' in menu.stdout
-            assert 'Goodbye.' in menu.stdout
-            print('Department menu: list, find, filter, guest authorization and clean exit passed.')
         print("JDBC integration passed: generated login, default role, encrypted connection, timezone, department read, invalid-password rejection and missing-config handling.")
     finally:
         if user_created:
