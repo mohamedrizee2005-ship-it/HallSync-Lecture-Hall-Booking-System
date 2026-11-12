@@ -1,5 +1,7 @@
 package lk.ac.kln.hallsync;
 
+import lk.ac.kln.hallsync.model.Department;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -69,7 +71,11 @@ public final class ConnectionCheck {
             try (ResultSet rows = statement.executeQuery()) {
                 System.out.println("Departments (up to 100):");
                 while (rows.next()) {
-                    System.out.printf("%d - %s%n", rows.getInt("DepartmentID"), rows.getString("DepartmentName"));
+                    Department department = new Department(
+                            rows.getInt("DepartmentID"),
+                            rows.getString("DepartmentName"));
+                    System.out.printf("%d - %s%n",
+                            department.getDepartmentId(), department.getDepartmentName());
                 }
             }
         }

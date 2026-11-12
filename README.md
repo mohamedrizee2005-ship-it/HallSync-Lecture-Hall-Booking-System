@@ -36,7 +36,7 @@ Start with [the database instructions](database/README.md).
 - **Check evidence:** [MySQL validation report](docs/database_validation.json).
 
 The database package contains 11 tables, 61 columns, 14 foreign keys, 28 CHECK constraints, 4 report views and 19 public workflow procedures.
-A [Java/JDBC connection starter](application/README.md) is available for the first application lesson. Password verification, user sessions, domain objects and the interface are later stages.
+A [Java/JDBC connection starter](application/README.md) and the [Department model lesson](application/DEPARTMENT_LESSON.md) are available. Password verification, user sessions, the remaining domain objects and the interface are later stages.
 
 ## Prototype scope
 

@@ -85,7 +85,8 @@ The exact server version suffix, role formatting and department identifiers may 
 | `pom.xml` | Declares Java target, Connector/J and the build plugins. | Maven is a build tool; it is not an OOP concept. |
 | `DatabaseConfig.java` | Loads and validates the local settings. | Encapsulation: private final fields, controlled construction and getters. `final` prevents field reassignment. |
 | `DatabaseConnectionFactory.java` | Uses settings to open a JDBC connection with UTF-8, TLS and Sri Lanka time. | Abstraction: callers use `open()`. Composition: a factory holds a configuration object. |
-| `ConnectionCheck.java` | Runs the example, reads the session information and departments, and reports success or failure. | Objects and method calls; JDBC interfaces and exception handling. |
+| `model/Department.java` | Holds the ID and name from one department row. | Encapsulation, constructors, getters and immutable state. |
+| `ConnectionCheck.java` | Reads the session information, maps each department row to a `Department` object, and displays its getters. | Objects and method calls; JDBC interfaces and exception handling. |
 | `db.example.properties` | Safe configuration template with no usable password. | Separates settings from source code. |
 | `01_create_application_login.sql` | Provisions the database connection account. | Database privileges and roles; separate from application user roles. |
 | `tests/connection_smoke.py` | Tests the packaged program against a temporary MySQL instance in GitHub Actions. | Integration testing; this Python helper is not the main application. |
@@ -119,7 +120,7 @@ TLS mode REQUIRED encrypts this local connection but does not verify server iden
 
 Send the version outputs first, then the connection result after running the steps. Never send the password or the contents of `db.local.properties`.
 
-After the connection works on your laptop, the next lesson is `Department` and `DepartmentRepository`: map database rows into Java objects and explain why each class exists. Booking operations and the interface will follow that foundation.
+After the connection works on your laptop, follow the [Department model lesson](DEPARTMENT_LESSON.md). The reader now creates a `Department` object for each returned row. The next lesson will introduce `DepartmentRepository` to give the database query a separate responsibility. Booking operations and the interface follow that foundation.
 
 ## Official references
 
