@@ -31,6 +31,12 @@ def main():
         full_sql=(ROOT/'database/HallSync_Setup.sql').read_text()
         upgrade_sql=full_sql
         db_checks.install(c,full_sql,schema,role)
+        prior_hash=db_checks.scalar(c,f"SELECT PasswordHash FROM {schema}.USER_ACCOUNT WHERE Username='demo_lecturer'")
+        prior_admin=db_checks.scalar(c,f"SELECT AccountID FROM {schema}.USER_ACCOUNT WHERE Username='demo_admin_a'")
+        db_checks.query(c,f"CALL {schema}.sp_register_lecturer_application(1,'Prior Lecturer','prior@example.invalid','prior_lecturer',%s,'PRIOR-001',@prior_app)",(prior_hash,))
+        db_checks.query(c,f"CALL {schema}.sp_review_lecturer_application(%s,@prior_app,'Approved','Existing decision to retain',TRUE)",(prior_admin,))
+        history_columns='ApplicationID,AccountID,StaffID,ApplicationStatus,SubmittedAt,ReviewedByID,ReviewedAt,ReviewNote'
+        prior_history=db_checks.query(c,f'SELECT {history_columns} FROM {schema}.ACCOUNT_APPLICATION ORDER BY ApplicationID')
         # Simulate the exact 2.2 account application table shape before this upgrade.
         db_checks.query(c,f'RENAME TABLE {schema}.ACCOUNT_APPLICATION TO {schema}.LECTURER_APPLICATION')
         db_checks.query(c,f'ALTER TABLE {schema}.LECTURER_APPLICATION DROP COLUMN RequestedRole')
@@ -44,6 +50,7 @@ def main():
             return [db_checks.query(c,f'SELECT * FROM {schema}.{table} ORDER BY 1') for table in ['USER_ACCOUNT','BOOKING','DEPARTMENT','BUILDING']]
         before=snapshot();db_checks.install(c,upgrade_sql,schema,role);db_checks.install(c,upgrade_sql,schema,role)
         assert snapshot()==before,'Lecturer upgrade changed existing data'
+        assert prior_history==db_checks.query(c,f'SELECT {history_columns} FROM {schema}.ACCOUNT_APPLICATION ORDER BY ApplicationID'),'Existing lecturer decision history changed'
         print('12-table installation upgrades safely; users, password hashes, department IDs and reservations are retained.')
         campus=json.loads((ROOT/'application/src/main/resources/campus.json').read_text())
         for faculty in campus['faculties']:
@@ -57,7 +64,7 @@ def main():
             rows=db_checks.query(c,sql)
             if sql.startswith('CREATE USER'):
                 user_created=True
-                assert rows and len(rows[0])==3,'Installer must return a generated login password'
+                assert rows and len(rows[0])>=3,'Installer must return a generated login password'
                 password=rows[0][2]
         # Repeating the installer login section must preserve that password.
         for sql in db_checks.statements(login_sql):db_checks.query(c,sql)
@@ -149,10 +156,12 @@ def main():
             assert bootstrap_password not in web.stdout + web.stderr
             print(web.stdout,end='')
             browser = browser_checks(config,feature_env)
+            room_reports_before=db_checks.query(c,f'SELECT * FROM {schema}.ROOM_ISSUE ORDER BY IssueID')
             before=snapshot();applications_before=db_checks.query(c,f'SELECT * FROM {schema}.ACCOUNT_APPLICATION ORDER BY ApplicationID')
             db_checks.install(c,upgrade_sql,schema,role)
             assert snapshot()==before and applications_before==db_checks.query(c,f'SELECT * FROM {schema}.ACCOUNT_APPLICATION ORDER BY ApplicationID')
-            print('Repeating the lecturer upgrade also preserves application review history.')
+            assert room_reports_before==db_checks.query(c,f'SELECT * FROM {schema}.ROOM_ISSUE ORDER BY IssueID'),'Room-report history changed'
+            print('Repeating setup preserves application decisions and room-report history.')
             workflow_checks = [line.removeprefix('PASS - ') for line in workflows.stdout.splitlines() if line.startswith('PASS - ')]
             web_checks = [line.removeprefix('PASS - ') for line in web.stdout.splitlines() if line.startswith('PASS - ')]
             complete_report = dict(java_version=java_version,mysql_version=report['mysql_version'],

@@ -116,6 +116,7 @@ public final class ApiHandler implements HttpHandler {
             finally { Arrays.fill(password,'\0'); }
         }
         if(path.equals("/api/auth/register")) {
+            if(!state.lecturerRegistrationEnabled())throw new HttpError(503,"Run database/HallSync_Setup.sql to enable verified account registration.");
             char[] password=text(b,"password").toCharArray();
             try { return Map.of("id",state.app().accounts.registerStudent(account(b),password)); }
             finally { Arrays.fill(password,'\0'); }

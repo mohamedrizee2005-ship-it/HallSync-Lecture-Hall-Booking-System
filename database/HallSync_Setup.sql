@@ -1052,7 +1052,7 @@ SQL SECURITY DEFINER
 BEGIN
  SELECT ((SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=DATABASE()
    AND routine_name IN ('sp_register_lecturer_application','sp_list_lecturer_applications','sp_review_lecturer_application'))=3
-   AND EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='account_application')) AS RegistrationEnabled;
+   AND EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='account_application')) AS RegistrationEnabled,3 AS SchemaVersion;
 END$$
 
 DROP PROCEDURE IF EXISTS sp_report_room_issue$$

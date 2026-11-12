@@ -21,6 +21,6 @@ public final class JdbcAccountApplicationRepository implements AccountApplicatio
         db.call("{CALL sp_review_lecturer_application(?,?,?,?,?)}",actor,application,decision,note,identityVerified);
     }
     @Override public boolean installed() throws SQLException {
-        return db.callRows("{CALL sp_get_lecturer_registration_status()}",r->r.getBoolean("RegistrationEnabled")).get(0);
+        return db.callRows("{CALL sp_get_lecturer_registration_status()}",r->r.getBoolean("RegistrationEnabled")&&r.getInt("SchemaVersion")==3).get(0);
     }
 }

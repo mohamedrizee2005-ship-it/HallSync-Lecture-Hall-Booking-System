@@ -244,7 +244,7 @@ def main():
         error('Application cannot call internal helper',lambda:call(api,'_hs_require_actor',(a,'ADMIN')),1370)
         ok('Application can read approved reporting interface',isinstance(query(api,'SELECT * FROM v_booking_status_totals'),tuple))
         call(api,'sp_find_available_halls',(day+timedelta(days=180),'09:00','10:00',10));ok('Application can call availability interface',True)
-        ok('Restricted login can read lecturer registration readiness',call(api,'sp_get_lecturer_registration_status')==((1,),))
+        ok('Restricted login can read lecturer registration readiness',call(api,'sp_get_lecturer_registration_status')==((1,3),))
         # Lecturer registration is atomic and never grants active access before review.
         def applicant(n,department=1,staff='STAFF-001',username=None,email=None):
             return call(api,'sp_register_lecturer_application',(department,'Applicant '+str(n),email or f'applicant{n}@example.invalid',username or 'applicant'+str(n),hash_value,staff),True)

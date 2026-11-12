@@ -70,7 +70,7 @@ async function api(path,data) {
  try { response=await fetch('/api'+path,{method:data===undefined?'GET':'POST',credentials:'same-origin',headers:data===undefined?{}:{'Content-Type':'application/json','X-CSRF-Token':S.csrf},...(data===undefined?{}:{body:JSON.stringify(data)})}); }
  catch { throw new Error('HallSync is not reachable. Keep the launcher open and try again.'); }
  const result=await response.json().catch(()=>({ok:false,message:'The server could not read this request.'}));
- if(!response.ok||!result.ok) { if(response.status===401&&S.user&&path!=='/auth/signin'){S.user=null;renderAuth('login');}throw new Error(result.message||'Please try again.'); }
+ if(!response.ok||!result.ok) { if(response.status===401&&S.user&&path!=='/auth/signin'){clearPrivateState();S.user=null;renderAuth('login');}throw new Error(result.message||'Please try again.'); }
  return result.data;
 }
 function busy(form,working) { const b=form.querySelector('[type=submit]');if(!b)return;if(working){b.dataset.label=b.innerHTML;b.disabled=true;b.innerHTML='<span class="spinner"></span> Please wait';}else{b.disabled=false;b.innerHTML=b.dataset.label||'Continue';} }
@@ -264,7 +264,7 @@ function blockForm(){const d=plusDays(today(),1);showModal('A little time for ma
 function formData(form){const d=Object.fromEntries(new FormData(form));for(const k of ['id','hallId','courseId','departmentId','buildingId','facilityId','capacity','attendance','quantity','workingQuantity','intakeYear','studyYear'])if(k in d)d[k]=d[k]===''?null:Number(d[k]);return d;}
 function passwordsMatch(d){if(d.password!==d.confirmation)throw new Error('The passwords do not match. Please enter them again.');if(Array.from(d.password||'').length<8)throw new Error('Choose a password with at least 8 characters.');delete d.confirmation;}
 async function afterSave(message){closeModal();await refreshData();await navigate(S.page,true);toast(message);}
-function clearPrivateState(){S.refs=null;S.applications=[];S.applicationFilter='Pending';S.applicationQuery='';S.bookings=[];S.schedule=[];S.people=[];S.blocks=[];S.reportData=null;S.wizard=null;S.confirm=null;}
+function clearPrivateState(){S.refs=null;S.applications=[];S.applicationFilter='Pending';S.applicationQuery='';S.bookings=[];S.schedule=[];S.people=[];S.blocks=[];S.reportData=null;S.wizard=null;S.confirm=null;S.issues=[];S.scheduleScope='campus';S.scheduleCourse='';S.scheduleDate=null;S.reportFrom='';S.reportTo='';S.roomQuery='';S.building='';S.faculty='';S.facility='';S.search=null;}
 
 
 function renderAccountApplications(main){
