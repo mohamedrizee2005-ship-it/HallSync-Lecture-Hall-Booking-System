@@ -1,0 +1,284 @@
+{
+  "university": "University of Kelaniya",
+  "verifiedOn": "2026-11-12",
+  "mapUrl": "https://www.kln.ac.lk/about/map",
+  "faculties": [
+    {
+      "id": "science",
+      "name": "Faculty of Science",
+      "location": "Dalugama",
+      "source": "https://science.kln.ac.lk/index.php/departments",
+      "departments": [
+        "Chemistry",
+        "Industrial Management",
+        "Mathematics",
+        "Microbiology",
+        "Physics and Electronics",
+        "Plant and Molecular Biology",
+        "Statistics and Computer Science",
+        "Zoology and Environmental Management"
+      ]
+    },
+    {
+      "id": "commerce",
+      "name": "Faculty of Commerce and Management Studies",
+      "location": "Dalugama",
+      "source": "https://dis.fcms.kln.ac.lk/",
+      "departments": [
+        "Accountancy",
+        "Commerce and Financial Management",
+        "Finance",
+        "Human Resource Management",
+        "Marketing Management"
+      ]
+    },
+    {
+      "id": "computing",
+      "name": "Faculty of Computing and Technology",
+      "location": "Peliyagoda",
+      "source": "https://library.kln.ac.lk/slls/index.php/meet-your-librarian/faculty-of-computing-and-technology",
+      "departments": [
+        "Applied Computing",
+        "Computer Systems Engineering",
+        "Software Engineering"
+      ]
+    },
+    {
+      "id": "humanities",
+      "name": "Faculty of Humanities",
+      "location": "Dalugama",
+      "source": "https://hu.kln.ac.lk/index.php",
+      "departments": [
+        "Drama, Cinema and Television",
+        "English",
+        "English Language Teaching",
+        "Fine Arts",
+        "Hindi Studies",
+        "Linguistics",
+        "Modern Languages",
+        "Pali and Buddhist Studies",
+        "Sanskrit and Eastern Studies",
+        "Sinhala",
+        "Western Classical Culture and Christian Culture"
+      ]
+    },
+    {
+      "id": "medicine",
+      "name": "Faculty of Medicine",
+      "location": "Ragama",
+      "source": "https://medicine.kln.ac.lk/index.php/divisions/our-departments.html",
+      "departments": [
+        "Anatomy",
+        "Biochemistry and Clinical Chemistry",
+        "Disability Studies",
+        "Family Medicine",
+        "Forensic Medicine",
+        "Medical Education",
+        "Medical Microbiology",
+        "Medicine",
+        "Obstetrics and Gynaecology",
+        "Paediatrics",
+        "Parasitology",
+        "Pathology",
+        "Pharmacology",
+        "Physiology",
+        "Psychiatry",
+        "Public Health",
+        "Surgery"
+      ]
+    },
+    {
+      "id": "social",
+      "name": "Faculty of Social Sciences",
+      "location": "Dalugama",
+      "source": "https://ss.kln.ac.lk/index.php/pages/administrative-team",
+      "departments": [
+        "Archaeology",
+        "Economics",
+        "Geography",
+        "History",
+        "Information Technology",
+        "International Studies",
+        "Library and Information Science",
+        "Mass Communication",
+        "Philosophy",
+        "Political Science",
+        "Social Statistics",
+        "Sociology",
+        "Sport Science and Physical Education"
+      ]
+    },
+    {
+      "id": "graduate",
+      "name": "Faculty of Graduate Studies",
+      "location": "Dalugama",
+      "source": "https://fgs.kln.ac.lk/",
+      "departments": []
+    }
+  ],
+  "buildings": [
+    {
+      "code": "A4",
+      "name": "A4 · MIT Building",
+      "faculty": "science",
+      "location": "Faculty of Science, Dalugama",
+      "source": "https://dscs.kln.ac.lk/news/allnews/statbee2"
+    },
+    {
+      "code": "A7",
+      "name": "A7 · Science Teaching Building",
+      "faculty": "science",
+      "location": "Faculty of Science, Dalugama",
+      "source": "https://dscs.kln.ac.lk/news/allnews/statbee2"
+    },
+    {
+      "code": "A8",
+      "name": "A8 · Auditorium Building",
+      "faculty": "science",
+      "location": "Faculty of Science, Dalugama",
+      "source": "https://conf.kln.ac.lk/icaps/index.php/component/sppagebuilder/?Itemid=0&id=98&view=page"
+    },
+    {
+      "code": "A11",
+      "name": "A11 · Science Teaching Building",
+      "faculty": "science",
+      "location": "Faculty of Science, Dalugama",
+      "source": "https://dscs.kln.ac.lk/news/allnews/statbee2"
+    },
+    {
+      "code": "B1",
+      "name": "B1 · Science Building",
+      "faculty": "science",
+      "location": "Faculty of Science, Dalugama",
+      "source": "https://conf.kln.ac.lk/icaps/index.php/for-authors/conference-programme-2026"
+    },
+    {
+      "code": "K14",
+      "name": "K14 · Humanities Building",
+      "faculty": "humanities",
+      "location": "Faculty of Humanities, Dalugama",
+      "source": "https://hu.kln.ac.lk/index.php"
+    }
+  ],
+  "venues": [
+    {
+      "key": "A4-202",
+      "buildingCode": "A4",
+      "number": "202",
+      "label": "Multimedia Room",
+      "capacity": null,
+      "floor": null,
+      "source": "https://conf.kln.ac.lk/scse2019/"
+    },
+    {
+      "key": "A7-406",
+      "buildingCode": "A7",
+      "number": "406",
+      "label": "Teaching hall",
+      "capacity": null,
+      "floor": null,
+      "source": "https://dscs.kln.ac.lk/news/allnews/statbee2"
+    },
+    {
+      "key": "A7-308",
+      "buildingCode": "A7",
+      "number": "308",
+      "label": "Teaching room",
+      "capacity": null,
+      "floor": null,
+      "source": "https://fgs.kln.ac.lk/index.php/newsnotices?start=0"
+    },
+    {
+      "key": "A7-2F1",
+      "buildingCode": "A7",
+      "number": "2F1",
+      "label": "Teaching room",
+      "capacity": null,
+      "floor": null,
+      "source": "https://fgs.kln.ac.lk/index.php/newsnotices?start=0"
+    },
+    {
+      "key": "A8-Auditorium",
+      "buildingCode": "A8",
+      "number": "Auditorium",
+      "label": "Auditorium",
+      "capacity": null,
+      "floor": null,
+      "source": "https://conf.kln.ac.lk/icaps/index.php/component/sppagebuilder/?Itemid=0&id=98&view=page"
+    },
+    {
+      "key": "A11-201",
+      "buildingCode": "A11",
+      "number": "201",
+      "label": "Teaching room",
+      "capacity": null,
+      "floor": null,
+      "source": "https://dscs.kln.ac.lk/news/allnews/statbee2"
+    },
+    {
+      "key": "A11-207",
+      "buildingCode": "A11",
+      "number": "207",
+      "label": "Teaching room",
+      "capacity": null,
+      "floor": null,
+      "source": "https://fgs.kln.ac.lk/index.php/newsnotices?start=0"
+    },
+    {
+      "key": "B1-212",
+      "buildingCode": "B1",
+      "number": "212",
+      "label": "Lecture Theatre",
+      "capacity": null,
+      "floor": null,
+      "source": "https://conf.kln.ac.lk/icaps/index.php/for-authors/conference-programme-2026"
+    },
+    {
+      "key": "K14-Auditorium",
+      "buildingCode": "K14",
+      "number": "Auditorium",
+      "label": "Auditorium",
+      "capacity": null,
+      "floor": null,
+      "source": "https://hu.kln.ac.lk/index.php"
+    }
+  ],
+  "photos": [
+    {
+      "file": "kelaniya-science.jpg",
+      "title": "Faculty of Science, University of Kelaniya",
+      "year": "2007 upload",
+      "author": "Sandunruki",
+      "license": "Public domain",
+      "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Faculty_of_Science,_University_of_Kelaniya.jpg",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Faculty_of_Science%2C_University_of_Kelaniya.jpg"
+    },
+    {
+      "file": "kelaniya-campus.jpg",
+      "title": "University of Kelaniya campus",
+      "year": "2007 upload",
+      "author": "Sandunruki",
+      "license": "Public domain",
+      "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:University_of_Kelaniya.jpg",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/1/18/University_of_Kelaniya.jpg"
+    },
+    {
+      "file": "kelaniya-computing.jpg",
+      "title": "Faculty of Computing and Technology, University of Kelaniya",
+      "year": "2024",
+      "author": "Dilumrane",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Fctimage.jpg",
+      "download": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Fctimage.jpg"
+    }
+  ],
+  "notes": [
+    "Names were cross-checked against university faculty pages. This source-linked catalogue is not an exhaustive live building inventory.",
+    "Hall capacities, floors, equipment and current timetable reservations require faculty confirmation. No unverified venue is imported as a bookable hall.",
+    "Social Sciences includes Information Technology from its department menu; older faculty overviews may list a different count.",
+    "Graduate Studies is listed as a faculty; no separate department list is imported for it."
+  ]
+}
