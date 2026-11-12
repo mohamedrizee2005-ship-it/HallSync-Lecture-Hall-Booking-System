@@ -2,6 +2,8 @@
 
 Lecture hall booking and campus space management with a **Java OOP backend, HTML/CSS/JavaScript interface and MySQL 8.0.46**.
 
+![HallSync university sign-in](.github/assets/hallsync-dark.webp)
+
 ## Start or update
 
 Requirements: JDK 17 or later, Maven, MySQL 8.0.46 and MySQL Workbench. Java 21 and 26 are checked in CI. Node.js, Python, XAMPP and a separate web server are not needed to run the downloaded project.
@@ -112,3 +114,9 @@ java -jar target/hallsync.jar
 ```
 
 GitHub Actions checks Java 21/26 with MySQL 8.0.46, including fresh/repeated setup, upgrading the older account table, data/password preservation, three-role registration and booking flows, unauthorized requests, session role changes, calendar/CSV export, room reports, hall retirement, mobile layout, long identities and competing approvals. Tests use isolated generated schema names and synthetic accounts, never a laptop's `hallsync_db`.
+
+## Release validation
+
+HallSync 3.0 passed 128 database checks and 305 application checks on each of Java 21 and Java 26 against MySQL 8.0.46. The latter include 119 API checks and 46 real-browser checks. A separate Windows job builds and launches the extracted project from a path with spaces and checks the fresh connection page. Normal-install checks confirm 14 published-capacity active halls with no demo users, invented bookings or assumed equipment quantities.
+
+[View the report interface](.github/assets/hallsync-reports.webp). Interface previews use isolated test data.
