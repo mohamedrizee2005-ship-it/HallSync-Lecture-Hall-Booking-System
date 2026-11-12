@@ -9,6 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /** In-memory, expiring browser sessions. No authentication data is stored in localStorage. */
 public final class BrowserSessions {
+    private final boolean secure;
+    public BrowserSessions() { this(false); }
+    public BrowserSessions(boolean secure) { this.secure=secure; }
     private static final long TTL=Duration.ofMinutes(30).toMillis();
     private final ConcurrentHashMap<String,Session> sessions=new ConcurrentHashMap<>();
     private final SecureRandom random=new SecureRandom();
@@ -42,7 +45,7 @@ public final class BrowserSessions {
     }
     private Session create(HttpExchange exchange,AuthenticatedUser user) {
         Session session=new Session(token(),token(),user);sessions.put(session.id,session);
-        exchange.getResponseHeaders().add("Set-Cookie","HALLSYNC_SESSION="+session.id+"; Path=/; HttpOnly; SameSite=Strict");
+        exchange.getResponseHeaders().add("Set-Cookie","HALLSYNC_SESSION="+session.id+"; Path=/; HttpOnly; SameSite=Strict"+(secure?"; Secure":""));
         return session;
     }
     private String token() { byte[] bytes=new byte[32];random.nextBytes(bytes);return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes); }

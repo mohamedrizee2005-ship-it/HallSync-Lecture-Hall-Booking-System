@@ -1,0 +1,4 @@
+/* Appearance is the only browser-persisted preference; credentials stay on the server. */
+(()=>{'use strict';const root=document.documentElement;const media=matchMedia('(prefers-color-scheme: dark)');let chosen=null;try{chosen=localStorage.getItem('hallsync.theme');}catch{}if(!['light','dark'].includes(chosen))chosen=null;
+const apply=()=>{root.dataset.theme=chosen||(media.matches?'dark':'light');document.querySelector('meta[name="theme-color"]')?.setAttribute('content',root.dataset.theme==='dark'?'#0e1b23':'#f5f5f0');window.dispatchEvent(new Event('hallsync:theme'));};
+window.HallSyncTheme={current:()=>root.dataset.theme,toggle:()=>{chosen=root.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('hallsync.theme',chosen);}catch{}apply();}};media.addEventListener('change',()=>{if(!chosen)apply();});apply();})();

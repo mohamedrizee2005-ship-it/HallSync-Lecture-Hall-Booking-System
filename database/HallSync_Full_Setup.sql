@@ -916,6 +916,70 @@ SET SESSION sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,N
 
 INSERT INTO DEPARTMENT(DepartmentName)
 SELECT 'Industrial Management' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Industrial Management');
+-- Source-linked Kelaniya department and building names. See application/src/main/resources/campus.json.
+-- Existing IDs are retained. Venue capacities and actual reservations must be confirmed separately.
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Chemistry' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Chemistry');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Mathematics' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Mathematics');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Microbiology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Microbiology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Physics and Electronics' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Physics and Electronics');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Plant and Molecular Biology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Plant and Molecular Biology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Statistics and Computer Science' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Statistics and Computer Science');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Zoology and Environmental Management' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Zoology and Environmental Management');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Accountancy' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Accountancy');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Commerce and Financial Management' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Commerce and Financial Management');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Finance' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Finance');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Human Resource Management' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Human Resource Management');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Marketing Management' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Marketing Management');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Applied Computing' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Applied Computing');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Computer Systems Engineering' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Computer Systems Engineering');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Software Engineering' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Software Engineering');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Drama, Cinema and Television' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Drama, Cinema and Television');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'English' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='English');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'English Language Teaching' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='English Language Teaching');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Fine Arts' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Fine Arts');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Hindi Studies' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Hindi Studies');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Linguistics' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Linguistics');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Modern Languages' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Modern Languages');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Pali and Buddhist Studies' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Pali and Buddhist Studies');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Sanskrit and Eastern Studies' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Sanskrit and Eastern Studies');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Sinhala' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Sinhala');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Western Classical Culture and Christian Culture' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Western Classical Culture and Christian Culture');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Anatomy' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Anatomy');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Biochemistry and Clinical Chemistry' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Biochemistry and Clinical Chemistry');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Disability Studies' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Disability Studies');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Family Medicine' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Family Medicine');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Forensic Medicine' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Forensic Medicine');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Medical Education' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Medical Education');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Medical Microbiology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Medical Microbiology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Medicine' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Medicine');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Obstetrics and Gynaecology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Obstetrics and Gynaecology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Paediatrics' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Paediatrics');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Parasitology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Parasitology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Pathology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Pathology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Pharmacology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Pharmacology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Physiology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Physiology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Psychiatry' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Psychiatry');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Public Health' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Public Health');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Surgery' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Surgery');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Archaeology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Archaeology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Economics' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Economics');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Geography' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Geography');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'History' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='History');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Information Technology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Information Technology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'International Studies' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='International Studies');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Library and Information Science' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Library and Information Science');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Mass Communication' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Mass Communication');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Philosophy' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Philosophy');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Political Science' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Political Science');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Social Statistics' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Social Statistics');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Sociology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Sociology');
+INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Sport Science and Physical Education' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Sport Science and Physical Education');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A4','A4 · MIT Building','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A4');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A7','A7 · Faculty of Science','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A7');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A8','A8 · Auditorium Building','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A8');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A11','A11 · Faculty of Science','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A11');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'B1','B1 · Science Building','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='B1');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'K14','K14 · Humanities Building','Faculty of Humanities, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='K14');
 SET @demo_department=(SELECT MIN(DepartmentID) FROM DEPARTMENT WHERE DepartmentName='Industrial Management');
 INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription)
 SELECT 'HS-DEMO','HallSync Demo Block','Synthetic practice location'

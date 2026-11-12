@@ -29,6 +29,11 @@ def main():
     bootstrap_created = False
     try:
         db_checks.install(c, (ROOT / "database/HallSync_Full_Setup.sql").read_text(), schema, role)
+        campus=json.loads((ROOT/'application/src/main/resources/campus.json').read_text())
+        for faculty in campus['faculties']:
+            for name in faculty['departments']:
+                assert db_checks.scalar(c,f"SELECT COUNT(*) FROM {schema}.DEPARTMENT WHERE DepartmentName=%s",(name,))==1
+        print('Kelaniya reference seed includes every sourced department without duplicate names.')
         login_sql = (ROOT / "database/Create_Application_Login.sql").read_text()
         # The CI service receives TCP connections through Docker's bridge.
         # The unique temporary CI login uses %, while the laptop script stays loopback-only.
@@ -117,6 +122,9 @@ def main():
             assert workflows.returncode == 0, workflows.stdout + workflows.stderr
             assert password not in workflows.stdout + workflows.stderr and application_password not in workflows.stdout + workflows.stderr
             print(workflows.stdout,end='')
+            # Simulate an existing installation without the new reference names.
+            db_checks.query(c,f"DELETE FROM {schema}.DEPARTMENT WHERE DepartmentName='Chemistry'")
+            db_checks.query(c,f"DELETE FROM {schema}.BUILDING WHERE BuildingCode='K14'")
             web = subprocess.run(['java','-cp',classpath,'lk.ac.kln.hallsync.WebIntegrationCheck',str(config)],
                                  cwd=ROOT,env=feature_env,capture_output=True,text=True,timeout=180)
             assert web.returncode == 0, web.stdout + web.stderr

@@ -58,6 +58,7 @@ jobs:
           HALLSYNC_TEST_PASSWORD: ''
         run: .venv/bin/python application/tests/connection_smoke.py
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: application-validation-java-${{ matrix.java }}
           path: |

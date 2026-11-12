@@ -18,11 +18,17 @@ public final class ApiHandler implements HttpHandler {
     private final ServerState state;
     private final BrowserSessions sessions;
     private final String origin;
-    public ApiHandler(ServerState state,BrowserSessions sessions,String origin) { this.state=state;this.sessions=sessions;this.origin=origin; }
+    private final String publicOrigin;
+    private final Set<String> allowedHosts;
+    public ApiHandler(ServerState state,BrowserSessions sessions,String origin) { this(state,sessions,origin,null); }
+    public ApiHandler(ServerState state,BrowserSessions sessions,String localOrigin,String publicOrigin) {
+        this.state=state;this.sessions=sessions;this.publicOrigin=PublicOrigin.validate(publicOrigin);this.origin=this.publicOrigin==null?localOrigin:this.publicOrigin;
+        this.allowedHosts=new HashSet<>();allowedHosts.add(java.net.URI.create(localOrigin).getRawAuthority());if(this.publicOrigin!=null)allowedHosts.add(java.net.URI.create(this.publicOrigin).getRawAuthority());
+    }
     @Override public void handle(HttpExchange x) throws IOException {
         try {
             if(!x.getRemoteAddress().getAddress().isLoopbackAddress())throw new HttpError(403,"Local access only.");
-            if(!origin.equals("http://"+x.getRequestHeaders().getFirst("Host")))throw new HttpError(403,"Open HallSync using its local launch address.");
+            if(!allowedHosts.contains(x.getRequestHeaders().getFirst("Host")))throw new HttpError(403,"Open HallSync using its local launch address.");
             BrowserSessions.Session session=sessions.get(x);
             if(x.getRequestMethod().equals("POST")) {
                 if(!origin.equals(x.getRequestHeaders().getFirst("Origin")) || !session.csrf().equals(x.getRequestHeaders().getFirst("X-CSRF-Token"))) {
@@ -61,6 +67,7 @@ public final class ApiHandler implements HttpHandler {
     private Object get(HttpExchange x,BrowserSessions.Session s) throws Exception {
         String path=x.getRequestURI().getPath();Map<String,String> q=query(x);
         if(path.equals("/api/state"))return snapshot(s);
+        if(path.equals("/api/campus"))return CampusDirectory.data();
         if(path.equals("/api/public/departments"))return state.app().departments.list();
         AuthenticatedUser user=require(s);var app=state.app();
         return switch(path) {
@@ -77,6 +84,7 @@ public final class ApiHandler implements HttpHandler {
     }
     private Object post(HttpExchange x,BrowserSessions.Session s,JsonObject b) throws Exception {
         String path=x.getRequestURI().getPath();
+        if(publicOrigin!=null&&path.startsWith("/api/setup/"))throw new HttpError(403,"Database and administrator initialization is available only in local mode.");
         if(path.equals("/api/setup/connection")) {
             s.mayAuthenticate();char[] password=text(b,"password").toCharArray();
             try { state.connect(text(b,"url"),text(b,"username"),password); }
@@ -105,6 +113,7 @@ public final class ApiHandler implements HttpHandler {
         }
         if(path.equals("/api/auth/logout"))return snapshot(sessions.rotate(x,s,null));
         AuthenticatedUser user=require(s);var app=state.app();
+        if(path.equals("/api/campus/import"))return CampusDirectory.install(app,user);
         if(path.equals("/api/bookings")) {
             BookingDraft draft=draft(b);Integer id=optionalInt(b,"id");
             if(id==null)return Map.of("id",app.bookings.create(user,draft));
@@ -141,7 +150,7 @@ public final class ApiHandler implements HttpHandler {
         };
     }
     private Map<String,Object> snapshot(BrowserSessions.Session s) {
-        Map<String,Object> data=new LinkedHashMap<>();data.put("connected",state.ready());data.put("hasConfig",state.hasFile());data.put("problem",state.problem());data.put("csrf",s.csrf());
+        Map<String,Object> data=new LinkedHashMap<>();data.put("connected",state.ready());data.put("localSetupAllowed",publicOrigin==null);data.put("hasConfig",state.hasFile());data.put("problem",state.problem());data.put("csrf",s.csrf());
         var user=s.user();data.put("user",user==null?null:Map.of("id",user.getAccountId(),"username",user.getUsername(),"role",user.getRole(),"admin",user.isAdministrator(),"canRequest",user.isAdministrator()||"Lecturer".equals(user.getRole())));
         return data;
     }

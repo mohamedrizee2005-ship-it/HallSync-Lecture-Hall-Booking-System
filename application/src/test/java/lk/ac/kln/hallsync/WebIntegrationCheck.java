@@ -46,6 +46,32 @@ public final class WebIntegrationCheck {
     private static Map<String,Object> booking(int hall,String date,String start,String end,String type,Integer course,List<Integer> groups) {
         Map<String,Object> d=new HashMap<>();d.put("hallId",hall);d.put("date",date);d.put("start",start);d.put("end",end);d.put("type",type);d.put("courseId",course);d.put("groupIds",groups);d.put("attendance",25);d.put("purpose","Web reservation <script>alert(1)</script>");return d;
     }
+    private static void publicProxyChecks(Path config) throws Exception {
+        check("HTTPS public origin is normalized",PublicOrigin.validate("https://Campus.Example/").equals("https://campus.example"));
+        for(String bad:List.of("http://example.com","https://example.com/path","https://name:secret@example.com","https://example.com?query=1")) {
+            boolean rejected=false;try { PublicOrigin.validate(bad); }catch(IllegalArgumentException e) { rejected=true; }check("Invalid shared origin rejected: "+bad.split(":")[0],rejected);
+        }
+        String origin="https://campus.example";
+        try(WebServer shared=new WebServer(config,0,origin)) {
+            shared.start();var client=HttpClient.newHttpClient();URI url=shared.address().resolve("/api/state");
+            var response=client.send(HttpRequest.newBuilder(url).GET().build(),HttpResponse.BodyHandlers.ofString());
+            String cookie=response.headers().firstValue("Set-Cookie").orElseThrow();
+            var state=JsonParser.parseString(response.body()).getAsJsonObject().getAsJsonObject("data");String token=state.get("csrf").getAsString();
+            check("Shared mode uses Secure HttpOnly session cookies",cookie.contains("Secure")&&cookie.contains("HttpOnly")&&cookie.contains("SameSite=Strict"));
+            check("Shared mode hides local database setup",!state.get("localSetupAllowed").getAsBoolean());
+            String session=cookie.split(";",2)[0];
+            var request=HttpRequest.newBuilder(shared.address().resolve("/api/setup/admin")).header("Cookie",session).header("Origin",origin).header("X-CSRF-Token",token).header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString("{}"));
+            check("Shared mode rejects administrator bootstrap",client.send(request.build(),HttpResponse.BodyHandlers.ofString()).statusCode()==403);
+            var login=HttpRequest.newBuilder(shared.address().resolve("/api/auth/signin")).header("Cookie",session).header("Origin",origin).header("X-CSRF-Token",token).header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString(JsonCodec.GSON.toJson(Map.of("username","ci_admin","password",applicationPassword))));
+            var signed=client.send(login.build(),HttpResponse.BodyHandlers.ofString());
+            check("Configured HTTPS proxy origin supports actual sign-in",signed.statusCode()==200&&signed.body().contains("ci_admin"));
+            var foreign=HttpRequest.newBuilder(shared.address().resolve("/api/auth/signin")).header("Cookie",session).header("Origin","https://other.example").header("X-CSRF-Token",token).header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString("{}"));
+            check("Shared mode retains strict origin validation",client.send(foreign.build(),HttpResponse.BodyHandlers.ofString()).statusCode()==403);
+        }
+        Path missing=Files.createTempDirectory("hallsync-shared-missing-");boolean rejected=false;
+        try { new WebServer(missing.resolve("missing.properties"),0,origin); }catch(IllegalStateException e) { rejected=true; }finally { Files.deleteIfExists(missing); }
+        check("Shared access requires local database configuration first",rejected);
+    }
     public static void main(String[] args) throws Exception {
         if(!"1".equals(System.getenv("HALLSYNC_RUN_INTEGRATION_TESTS")))throw new IllegalStateException("Explicit test enablement required.");
         DatabaseConfig cfg=DatabaseConfig.load(Path.of(args[0]));
@@ -57,7 +83,10 @@ public final class WebIntegrationCheck {
             check("Static content has CSP and nosniff",html.headers().firstValue("Content-Security-Policy").orElse("").contains("frame-ancestors 'none'")&&html.headers().firstValue("X-Content-Type-Options").orElse("").equals("nosniff"));
             check("Frontend JavaScript is bundled locally",admin.raw("/app.js").body().contains("function renderWizard"));
             check("Styles are bundled locally",admin.raw("/app.css").statusCode()==200);
-            check("Room illustrations are bundled locally",admin.raw("/assets/space-1.svg").statusCode()==200);
+            check("Real campus photography is bundled locally",admin.raw("/assets/kelaniya-science.jpg").statusCode()==200);
+            check("Early theme script is bundled locally",admin.raw("/theme.js").statusCode()==200);
+            var campus=admin.get("/api/campus",200).getAsJsonObject();check("Public campus catalogue contains seven faculty references",campus.getAsJsonArray("faculties").size()==7);
+            check("Sourced venues never contain an invented capacity",campus.getAsJsonArray("venues").asList().stream().allMatch(v->v.getAsJsonObject().get("capacity").isJsonNull()));
             check("Private settings cannot be downloaded",admin.raw("/db.local.properties").statusCode()==404);
             check("Traversal cannot expose local files",admin.raw("/%2e%2e/db.local.properties").statusCode()==404);
             var initial=admin.state();check("Setup detects the existing working database",initial.get("connected").getAsBoolean());
@@ -85,6 +114,14 @@ public final class WebIntegrationCheck {
             guest.get("/api/accounts",403);guest.get("/api/bookings?scope=all",403);guest.get("/api/reports?kind=BookingDetails",403);
             check("Student cannot access accounts, all bookings or reports",true);
             guest.post("/api/catalog/departments",Map.of("name","Forbidden"),403);check("Student cannot mutate catalogues",true);
+            guest.post("/api/campus/import",Map.of(),403);check("Student cannot import campus reference data",true);
+            int beforeHalls=admin.get("/api/reference",200).getAsJsonObject().getAsJsonArray("halls").size();
+            var imported=admin.post("/api/campus/import",Map.of(),200).getAsJsonObject();
+            check("Existing installation gains only missing reference names",imported.get("departmentsAdded").getAsInt()==1&&imported.get("buildingsAdded").getAsInt()==1);
+            var repeated=admin.post("/api/campus/import",Map.of(),200).getAsJsonObject();
+            check("Campus import preserves existing names on repeated runs",repeated.get("departmentsAdded").getAsInt()==0&&repeated.get("buildingsAdded").getAsInt()==0);
+            check("Campus import does not activate unconfirmed venues",imported.get("hallsAdded").getAsInt()==0&&admin.get("/api/reference",200).getAsJsonObject().getAsJsonArray("halls").size()==beforeHalls);
+            check("Science departments are available after import",admin.get("/api/public/departments",200).toString().contains("Plant and Molecular Biology"));
             int department=id(admin.post("/api/catalog/departments",Map.of("name","Web Department"),200));
             int building=id(admin.post("/api/catalog/buildings",Map.of("code","WEB","name","Web Campus","location","Test location"),200));
             int facility=id(admin.post("/api/catalog/facilities",Map.of("name","Web Display","description","Test display"),200));
@@ -138,6 +175,7 @@ public final class WebIntegrationCheck {
                 setup.post("/api/setup/connection",Map.of("url",cfg.getUrl(),"username",cfg.getUsername(),"password",cfg.getPassword()),200);
                 check("Browser first-connection setup tests and saves the existing database login",Files.exists(file)&&setup.state().get("connected").getAsBoolean());base=previous;
             } finally { Files.deleteIfExists(file);Files.deleteIfExists(folder); }
+            publicProxyChecks(Path.of(args[0]));
             System.out.println("WEB_CHECKS_PASSED="+passed);
         }
     }
