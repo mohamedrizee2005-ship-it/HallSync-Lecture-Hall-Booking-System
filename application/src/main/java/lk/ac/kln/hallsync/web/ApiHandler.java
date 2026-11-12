@@ -52,7 +52,7 @@ public final class ApiHandler implements HttpHandler {
                 case 1045 -> "The database username or password was not accepted.";
                 case 1062 -> "That username, email, code or group already exists.";
                 case 1142,1370 -> "This database login does not have the required permission.";
-                case 1305 -> "A database procedure is missing. Run Upgrade_Desktop_Reads.sql using Workbench.";
+                case 1305 -> "A required database update is missing. Ask the administrator to apply the supplied upgrade scripts.";
                 case 1452 -> "A selected record is no longer available. Refresh and try again.";
                 case 1205,1213 -> "Another request changed these records. Refresh and try again.";
                 default -> "45000".equals(e.getSQLState()) ? e.getMessage() : "We could not reach the database. Check MySQL is running.";
@@ -76,6 +76,7 @@ public final class ApiHandler implements HttpHandler {
             case "/api/bookings/groups" -> app.bookings.groupsForEdit(user,Integer.parseInt(q.get("id")));
             case "/api/schedule" -> app.bookings.schedule(user,LocalDate.parse(q.get("from")),LocalDate.parse(q.get("to")));
             case "/api/availability" -> app.catalog.available(user,LocalDate.parse(q.get("date")),LocalTime.parse(q.get("start")),LocalTime.parse(q.get("end")),Integer.parseInt(q.get("attendance")));
+            case "/api/lecturer-applications" -> state.app().lecturerApplications.list(user,optionalQuery(q,"status"));
             case "/api/accounts" -> app.accounts.list(user,nullableInteger(q.get("department")));
             case "/api/blocks" -> app.blocks.list(user);
             case "/api/reports" -> app.reports.load(user,ReportKind.valueOf(q.get("kind")));
@@ -106,6 +107,12 @@ public final class ApiHandler implements HttpHandler {
                 return snapshot(sessions.rotate(x,s,found.get()));
             } finally { Arrays.fill(password,'\0'); }
         }
+        if(path.equals("/api/auth/register-lecturer")) {
+            if(!state.lecturerRegistrationEnabled())throw new HttpError(503,"Lecturer registration is not enabled yet. Ask your administrator to install the lecturer approval update.");
+            char[] password=text(b,"password").toCharArray();
+            try { return Map.of("id",state.app().lecturerApplications.register(account(b),text(b,"staffId"),password),"status","Pending"); }
+            finally { Arrays.fill(password,'\0'); }
+        }
         if(path.equals("/api/auth/register")) {
             char[] password=text(b,"password").toCharArray();
             try { return Map.of("id",state.app().accounts.registerStudent(account(b),password)); }
@@ -113,6 +120,11 @@ public final class ApiHandler implements HttpHandler {
         }
         if(path.equals("/api/auth/logout"))return snapshot(sessions.rotate(x,s,null));
         AuthenticatedUser user=require(s);var app=state.app();
+        if(path.equals("/api/lecturer-applications/review")) {
+            JsonElement verified=b.get("identityVerified");boolean confirmed=verified!=null&&verified.isJsonPrimitive()&&verified.getAsJsonPrimitive().isBoolean()&&verified.getAsBoolean();
+            app.lecturerApplications.review(user,integer(b,"id"),text(b,"decision"),optionalText(b,"note"),confirmed);
+            return Map.of("saved",true);
+        }
         if(path.equals("/api/campus/import"))return CampusDirectory.install(app,user);
         if(path.equals("/api/bookings")) {
             BookingDraft draft=draft(b);Integer id=optionalInt(b,"id");
@@ -150,7 +162,7 @@ public final class ApiHandler implements HttpHandler {
         };
     }
     private Map<String,Object> snapshot(BrowserSessions.Session s) {
-        Map<String,Object> data=new LinkedHashMap<>();data.put("connected",state.ready());data.put("localSetupAllowed",publicOrigin==null);data.put("hasConfig",state.hasFile());data.put("problem",state.problem());data.put("csrf",s.csrf());
+        Map<String,Object> data=new LinkedHashMap<>();data.put("connected",state.ready());data.put("lecturerRegistrationEnabled",state.lecturerRegistrationEnabled());data.put("localSetupAllowed",publicOrigin==null);data.put("hasConfig",state.hasFile());data.put("problem",state.problem());data.put("csrf",s.csrf());
         var user=s.user();data.put("user",user==null?null:Map.of("id",user.getAccountId(),"username",user.getUsername(),"role",user.getRole(),"admin",user.isAdministrator(),"canRequest",user.isAdministrator()||"Lecturer".equals(user.getRole())));
         return data;
     }
@@ -171,6 +183,7 @@ public final class ApiHandler implements HttpHandler {
     }
     private static int integer(JsonObject b,String key) { if(!b.has(key)||b.get(key).isJsonNull())throw new IllegalArgumentException("Complete the "+key+" field.");return strictInteger(b.get(key)); }
     private static Integer optionalInt(JsonObject b,String key) { return !b.has(key)||b.get(key).isJsonNull()?null:integer(b,key); }
+    private static String optionalQuery(Map<String,String> query,String key) { String value=query.get(key);return value==null||value.isBlank()?null:value; }
     private static Integer nullableInteger(String v) { return v==null||v.isBlank()?null:Integer.valueOf(v); }
     private static Map<String,String> query(HttpExchange x) {
         Map<String,String> result=new HashMap<>();String raw=x.getRequestURI().getRawQuery();

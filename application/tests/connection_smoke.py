@@ -28,7 +28,26 @@ def main():
     bootstrap_user = "hs_bootstrap_" + suffix
     bootstrap_created = False
     try:
-        db_checks.install(c, (ROOT / "database/HallSync_Full_Setup.sql").read_text(), schema, role)
+        full_sql=(ROOT/'database/HallSync_Full_Setup.sql').read_text()
+        upgrade_sql=(ROOT/'database/Upgrade_Lecturer_Approvals.sql').read_text()
+        legacy_sql=full_sql
+        for section in ['TABLE','PROCEDURES','GRANTS']:
+            start='-- BEGIN LECTURER APPLICATION '+section
+            end='-- END LECTURER APPLICATION '+section
+            block=full_sql[full_sql.index(start):full_sql.index(end)+len(end)]
+            assert block==upgrade_sql[upgrade_sql.index(start):upgrade_sql.index(end)+len(end)], 'Fresh/upgrade definitions drifted'
+            legacy_sql=legacy_sql.replace(block,'')
+        db_checks.install(c,legacy_sql,schema,role)
+        assert db_checks.scalar(c,"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE'",(schema,))==11
+        # Preserve an existing reservation as well as every original account/password.
+        a=db_checks.scalar(c,f"SELECT AccountID FROM {schema}.USER_ACCOUNT WHERE Username='demo_lecturer'")
+        h=db_checks.scalar(c,f"SELECT MIN(HallID) FROM {schema}.LECTURE_HALL")
+        db_checks.query(c,f"CALL {schema}.sp_create_booking(%s,%s,NULL,%s,'20:00','21:00','Migration preservation probe','Event',1,JSON_ARRAY(),@upgrade_probe)",(a,h,date.today()+timedelta(days=91)))
+        def snapshot():
+            return [db_checks.query(c,f'SELECT * FROM {schema}.{table} ORDER BY 1') for table in ['USER_ACCOUNT','BOOKING','DEPARTMENT','BUILDING']]
+        before=snapshot();db_checks.install(c,upgrade_sql,schema,role);db_checks.install(c,upgrade_sql,schema,role)
+        assert snapshot()==before,'Lecturer upgrade changed existing data'
+        print('11-table installation upgrades safely; users, password hashes, department IDs and reservations are retained.')
         campus=json.loads((ROOT/'application/src/main/resources/campus.json').read_text())
         for faculty in campus['faculties']:
             for name in faculty['departments']:
@@ -132,11 +151,15 @@ def main():
             assert bootstrap_password not in web.stdout + web.stderr
             print(web.stdout,end='')
             browser = browser_checks(config,feature_env)
+            before=snapshot();applications_before=db_checks.query(c,f'SELECT * FROM {schema}.LECTURER_APPLICATION ORDER BY ApplicationID')
+            db_checks.install(c,upgrade_sql,schema,role)
+            assert snapshot()==before and applications_before==db_checks.query(c,f'SELECT * FROM {schema}.LECTURER_APPLICATION ORDER BY ApplicationID')
+            print('Repeating the lecturer upgrade also preserves application review history.')
             workflow_checks = [line.removeprefix('PASS - ') for line in workflows.stdout.splitlines() if line.startswith('PASS - ')]
             web_checks = [line.removeprefix('PASS - ') for line in web.stdout.splitlines() if line.startswith('PASS - ')]
             complete_report = dict(java_version=java_version,mysql_version=report['mysql_version'],
                                    department_checks=passed,workflow_checks=workflow_checks,web_checks=web_checks,browser_checks=browser,
-                                   total_checks=len(passed)+len(workflow_checks)+len(web_checks)+len(browser),read_upgrade_preserves_data=True)
+                                   total_checks=len(passed)+len(workflow_checks)+len(web_checks)+len(browser),read_upgrade_preserves_data=True,lecturer_upgrade_preserves_data=True)
             (ROOT/'application/target/application-validation.json').write_text(json.dumps(complete_report,indent=2))
         print("JDBC integration passed: generated login, default role, encrypted connection, timezone, department read, invalid-password rejection and missing-config handling.")
     finally:

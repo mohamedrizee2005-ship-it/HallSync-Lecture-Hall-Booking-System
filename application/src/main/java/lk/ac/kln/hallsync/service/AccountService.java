@@ -25,7 +25,7 @@ public final class AccountService {
     public List<AccountSummary> list(AuthenticatedUser user, Integer department) throws SQLException {
         int actor = AccessRules.administrator(user); return repository.list(actor,Validation.optionalId(department,"Department"));
     }
-    private static AccountDraft validate(AccountDraft d) {
+    static AccountDraft validate(AccountDraft d) {
         if (d == null) { throw new IllegalArgumentException("Account details are required."); }
         String email = Validation.text(d.email(),"Email",254);
         if (!email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) { throw new IllegalArgumentException("Enter an email address such as name@example.com."); }

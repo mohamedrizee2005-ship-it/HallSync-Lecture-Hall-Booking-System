@@ -5,15 +5,15 @@ SET SESSION time_zone = '+05:30';
 SET SESSION sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 -- Metadata and integrity inspection. These statements only read data.
-SELECT 'Base tables' AS ObjectType,COUNT(*) AS ActualCount,11 AS ExpectedCount
+SELECT 'Base tables' AS ObjectType,COUNT(*) AS ActualCount,12 AS ExpectedCount
 FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'
-UNION ALL SELECT 'Columns',COUNT(*),61 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name IN (SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE')
-UNION ALL SELECT 'Primary keys',COUNT(*),11 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='PRIMARY KEY'
-UNION ALL SELECT 'Foreign keys',COUNT(*),14 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='FOREIGN KEY'
-UNION ALL SELECT 'Other unique keys',COUNT(*),7 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='UNIQUE'
-UNION ALL SELECT 'CHECK constraints',COUNT(*),28 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='CHECK'
+UNION ALL SELECT 'Columns',COUNT(*),69 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name IN (SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE')
+UNION ALL SELECT 'Primary keys',COUNT(*),12 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='PRIMARY KEY'
+UNION ALL SELECT 'Foreign keys',COUNT(*),16 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='FOREIGN KEY'
+UNION ALL SELECT 'Other unique keys',COUNT(*),8 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='UNIQUE'
+UNION ALL SELECT 'CHECK constraints',COUNT(*),32 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='CHECK'
 UNION ALL SELECT 'Views',COUNT(*),4 FROM information_schema.views WHERE table_schema=DATABASE()
-UNION ALL SELECT 'Procedures',COUNT(*),27 FROM information_schema.routines WHERE routine_schema=DATABASE() AND routine_type='PROCEDURE';
+UNION ALL SELECT 'Procedures',COUNT(*),30 FROM information_schema.routines WHERE routine_schema=DATABASE() AND routine_type='PROCEDURE';
 
 SELECT TABLE_NAME,GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION) AS PrimaryKeyColumns
 FROM information_schema.key_column_usage WHERE table_schema=DATABASE() AND constraint_name='PRIMARY'
@@ -38,3 +38,10 @@ WHERE k.BookingStatus='Approved' AND x.BlockStatus='Active';
 SELECT k.BookingID FROM BOOKING k WHERE k.BookingType IN ('Lecture','Tutorial') AND NOT EXISTS(SELECT 1 FROM BOOKING_GROUP g WHERE g.BookingID=k.BookingID);
 SELECT k.BookingID,k.ExpectedAttendance,h.Capacity FROM BOOKING k JOIN LECTURE_HALL h ON h.HallID=k.HallID
 WHERE k.BookingStatus='Approved' AND TIMESTAMP(k.BookingDate,k.EndTime)>CURRENT_TIMESTAMP AND (k.ExpectedAttendance>h.Capacity OR h.OperationalStatus<>'Active');
+
+-- Application decisions and activation should agree; expected no rows.
+SELECT a.ApplicationID,a.ApplicationStatus,u.IsActive,u.Role FROM LECTURER_APPLICATION a
+JOIN USER_ACCOUNT u ON u.AccountID=a.AccountID
+WHERE (a.ApplicationStatus IN ('Pending','Rejected') AND (u.IsActive<>0 OR u.Role<>'Lecturer'))
+OR (a.ApplicationStatus='Approved' AND u.Role<>'Lecturer');
+-- Approved accounts may later be disabled administratively without changing approval history.

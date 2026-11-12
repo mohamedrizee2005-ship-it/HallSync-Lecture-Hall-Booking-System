@@ -10,7 +10,9 @@ A browser-based lecture hall booking workspace for the Faculty of Science, Unive
 
 - Responsive room discovery with date, time, capacity and building filters.
 - A guided booking flow with course and student-group selection.
-- Personal reservations, independent approvals, cancellation and retained history.
+- Lecturer self-registration with administrator verification before sign-in.
+- Separate lecturer-account approvals and hall-booking approvals, with retained decision history.
+- Personal reservations, independent booking approvals and cancellation.
 - Weekly campus schedule and room equipment details.
 - Administrator catalogues, hall maintenance, account provisioning and reports.
 - CSV report export, server-side sessions and salted Argon2id password hashing.
@@ -21,9 +23,10 @@ A browser-based lecture hall booking workspace for the Faculty of Science, Unive
 ## Run an existing installation
 
 1. Extract into a new folder and copy your working `application/db.local.properties` into the new `application` directory.
-2. Double-click **run_hallsync.cmd**. HallSync builds and opens in your browser.
-3. Sign in using your existing HallSync account. Keep the launcher window open while using the application.
-4. Open **Kelaniya campus → Load campus details** as an administrator to add missing university department and building names. No SQL migration is needed.
+2. In MySQL Workbench, run **database/Upgrade_Lecturer_Approvals.sql** once using your MySQL administrator account. It adds lecturer registration and review without changing existing passwords, users or bookings. Do not rerun the full installer.
+3. Double-click **run_hallsync.cmd**. HallSync builds and opens in your browser.
+4. Sign in using your existing HallSync account. Keep the launcher window open while using the application.
+5. Open **Kelaniya campus → Load campus details** as an administrator to add missing university department and building names.
 
 The existing MySQL schema and accounts are reused. Do not drop your database or rerun the full installer. Existing passwords remain valid. New account passwords require **8–128 characters**.
 
@@ -34,7 +37,7 @@ Requirements: **JDK 17+**, **Maven**, and **MySQL 8.0.46**. MySQL Workbench can 
 1. In Workbench, execute `database/HallSync_Full_Setup.sql` once, then `database/Create_Application_Login.sql`. Keep the generated database password private.
 2. Run `run_hallsync.cmd`. Use the browser connection form to enter the limited MySQL login. It tests the connection and saves a new private local settings file.
 3. On the sign-in page choose **Create administrator**. Enter your MySQL administrator credentials and the application account details. The database administrator password is used once and is not saved.
-4. Sign in and provision staff accounts through **People**. Public registration creates Student accounts only.
+4. Sign in and manage staff through **People** and **Lecturer approvals**. Student registration grants view-only access. Lecturer registration creates an inactive account and a Pending application; it grants no booking access until approval.
 5. Open **Kelaniya campus**. Choose **Set up hall**, confirm its actual seating capacity with the faculty office, and save. Add its working equipment in **Hall care**. Load existing timetable reservations before trusting availability.
 
 For an older database missing the administrator read routines, run `database/Upgrade_Desktop_Reads.sql` once using Workbench. It preserves data. `database/Verify_Database.sql` provides read-only verification.
@@ -63,7 +66,27 @@ The previous local password-hash helper and administrator SQL template remain av
 
 ## Data and access
 
-The database contains 11 tables, 4 reporting views and 27 procedures. Times use Asia/Colombo. Booking approval and maintenance coordinate under hall-row locks. Pending requests do not reserve halls; terminal records remain in history.
+The database contains 12 tables, 4 reporting views and 30 procedures. Times use Asia/Colombo. Booking approval and maintenance coordinate under hall-row locks. Pending requests do not reserve halls; terminal records remain in history.
+
+## Accounts and lecturer verification
+
+| Role | Registration | Access |
+| --- | --- | --- |
+| Student | Public student registration | View halls, availability and schedules |
+| Lecturer | Public lecturer application; administrator verifies and approves | Sign in after approval; submit and manage own booking requests |
+| Administrator | Local privileged setup or provisioning by an existing administrator | Manage campus data, accounts, lecturer applications, bookings and reports |
+
+Lecturer applicants provide their name, email, username, department, staff ID and a password. The password is hashed with Argon2id; reviewers never receive it. A new Lecturer account is stored with `IsActive=0` and a separate `LECTURER_APPLICATION` record is Pending. Until approval, authentication and database actor checks deny lecturer access. Student signup cannot grant Lecturer or AdminStaff access, and there is no public administrator registration route.
+
+In **Lecturer approvals**, an administrator checks university staff records and confirms that the lecturer actually submitted this registration through an independent university channel. A matching name, staff ID or email alone does not establish identity. There is no automatic email verification or notification service in this version. The administrator explicitly confirms verification, then approves. Account activation and the decision commit in one transaction; competing reviews have only one winner.
+
+Rejection requires a reason and leaves the account inactive. The reviewer, decision time and note remain in history. Decisions are final in this version; rejected applicants should contact the administrator to resolve corrections. Public resubmission and password recovery are not implemented.
+
+Existing administrator-provisioned lecturers remain valid. An administrator may still provision an already-verified staff account directly through **People**. Administrator accounts require their own username and password; there is no password-free or universal administrator login.
+
+Lecturer approval and booking approval are independent. After lecturer approval, a booking starts Pending and reserves no room until a separate booking decision. An administrator cannot approve their own hall booking. Students cannot request halls.
+
+The additional ER entity is `LECTURER_APPLICATION`: its unique applicant `AccountID` references `USER_ACCOUNT`; optional `ReviewedByID` references the reviewing administrator in `USER_ACCOUNT`. Existing user IDs, passwords and booking relationships are retained. The upgrade adds only the new table and three restricted procedures, with no raw account-table access granted to the application login.
 
 ## Campus reference data
 
@@ -102,4 +125,4 @@ A temporary tunnel is for demonstrations, not an always-on university service. P
 
 Authentication uses expiring HttpOnly/SameSite cookies, session rotation and CSRF checks. Database credentials and `*.local.sql` files remain private. Passwords use salted Argon2id hashes.
 
-GitHub Actions checks the Maven build on JDK 21/26, real MySQL workflows, campus import preservation, HTTP authorization, shared-origin restrictions, theme persistence and desktop/mobile browser interactions. Tests use disposable schemas and do not reset an installed database.
+GitHub Actions checks the Maven build on JDK 21/26, real MySQL workflows, campus import preservation, lecturer registration/review and upgrade preservation, HTTP authorization, shared-origin restrictions, theme persistence and desktop/mobile browser interactions. Tests use disposable schemas and do not reset an installed database.

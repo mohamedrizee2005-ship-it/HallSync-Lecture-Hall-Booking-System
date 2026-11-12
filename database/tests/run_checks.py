@@ -77,12 +77,12 @@ def main():
         install(c,(ROOT/'HallSync_Full_Setup.sql').read_text(),db,role);roles.append(role)
         m=metadata(c,db)
         ok('Upgrade preserves existing department ID 1',scalar(c,"SELECT DepartmentName FROM DEPARTMENT WHERE DepartmentID=1")=='Industrial Management')
-        ok('11 tables',scalar(c,"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE'",(db,))==11)
-        ok('61 columns',len(m['columns'])==61)
-        for kind,count in [('PRIMARY KEY',11),('FOREIGN KEY',14),('UNIQUE',7),('CHECK',28)]:
+        ok('12 tables',scalar(c,"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE'",(db,))==12)
+        ok('69 columns',len(m['columns'])==69)
+        for kind,count in [('PRIMARY KEY',12),('FOREIGN KEY',16),('UNIQUE',8),('CHECK',32)]:
             ok(str(count)+' '+kind,scalar(c,"SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=%s AND constraint_type=%s",(db,kind))==count)
         ok('4 views',scalar(c,"SELECT COUNT(*) FROM information_schema.views WHERE table_schema=%s",(db,))==4)
-        ok('27 procedures',scalar(c,"SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=%s",(db,))==27)
+        ok('30 procedures',scalar(c,"SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=%s",(db,))==30)
         initial_users=scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')
         install(c,seed,db,role)
         ok('Demo seed can repeat without duplicate accounts',scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')==initial_users)
@@ -239,16 +239,64 @@ def main():
         error('Application cannot call internal helper',lambda:call(api,'_hs_require_actor',(a,'ADMIN')),1370)
         ok('Application can read approved reporting interface',isinstance(query(api,'SELECT * FROM v_booking_status_totals'),tuple))
         call(api,'sp_find_available_halls',(day+timedelta(days=180),'09:00','10:00',10));ok('Application can call availability interface',True)
+        # Lecturer registration is atomic and never grants active access before review.
+        def applicant(n,department=1,staff='STAFF-001',username=None,email=None):
+            return call(api,'sp_register_lecturer_application',(department,'Applicant '+str(n),email or f'applicant{n}@example.invalid',username or 'applicant'+str(n),hash_value,staff),True)
+        def app_account(k):return scalar(c,'SELECT AccountID FROM LECTURER_APPLICATION WHERE ApplicationID=%s',(k,))
+        def decide(k,actor=a,decision='Approved',note=None,verified=True,conn=api):
+            return call(conn,'sp_review_lecturer_application',(actor,k,decision,note,verified))
+        k=applicant(1);who=app_account(k)
+        ok('Lecturer self-registration creates an inactive lecturer',query(c,'SELECT Role,IsActive FROM USER_ACCOUNT WHERE AccountID=%s',(who,))[0]==('Lecturer',0))
+        error('Pending applicant cannot request a hall through SQL',lambda:book(actor=who,d=day+timedelta(days=200)))
+        error('Student cannot inspect lecturer applications',lambda:call(api,'sp_list_lecturer_applications',(s,None)))
+        error('Lecturer cannot approve a lecturer application',lambda:decide(k,actor=l))
+        error('Student cannot approve a lecturer application',lambda:decide(k,actor=s))
+        error('Approval requires independent identity verification',lambda:decide(k,verified=False))
+        error('Rejected applications require a reason',lambda:decide(k,decision='Rejected',note='   '))
+        ok('Failed review leaves pending account inactive',query(c,'SELECT ApplicationStatus,IsActive FROM LECTURER_APPLICATION x JOIN USER_ACCOUNT u ON u.AccountID=x.AccountID WHERE ApplicationID=%s',(k,))[0]==('Pending',0))
+        listing=call(api,'sp_list_lecturer_applications',(a,'Pending'))
+        ok('Admin application list excludes hashes',len(listing)>=1 and '$argon2id$' not in str(listing))
+        decide(k,note='Confirmed with the lecturer through the faculty office.')
+        ok('Account approval and audit data commit together',query(c,'SELECT ApplicationStatus,ReviewedByID,IsActive FROM LECTURER_APPLICATION x JOIN USER_ACCOUNT u ON u.AccountID=x.AccountID WHERE ApplicationID=%s',(k,))[0]==('Approved',a,1))
+        own_booking=book(actor=who,d=day+timedelta(days=201))
+        ok('Approved lecturer can request a hall but booking remains pending',scalar(c,'SELECT BookingStatus FROM BOOKING WHERE BookingID=%s',(own_booking,))=='Pending')
+        error('Reviewed application cannot be decided twice',lambda:decide(k))
+        rejected=applicant(2);decide(rejected,decision='Rejected',note='Staff identity could not be confirmed.',verified=False)
+        ok('Rejection retains history and blocks access',query(c,'SELECT ApplicationStatus,ReviewNote,IsActive FROM LECTURER_APPLICATION x JOIN USER_ACCOUNT u ON u.AccountID=x.AccountID WHERE ApplicationID=%s',(rejected,))[0]==('Rejected','Staff identity could not be confirmed.',0))
+        error('Rejected application cannot be reactivated through review',lambda:decide(rejected))
+        before_accounts=scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')
+        error('Duplicate application username is refused',lambda:applicant(3,username='applicant1'),1062)
+        error('Duplicate application email is refused',lambda:applicant(3,email='applicant1@example.invalid'),1062)
+        error('Registration needs a department',lambda:applicant(3,department=None))
+        error('Registration refuses blank staff ID',lambda:applicant(3,staff='   '))
+        error('Registration refuses control characters in staff ID',lambda:applicant(3,staff='ID\nBAD'))
+        ok('Failed registration leaves no orphan account',scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')==before_accounts)
+        error('Private application table cannot be read directly',lambda:query(api,'SELECT * FROM LECTURER_APPLICATION'),1142)
+        for n in range(3):
+            racing=applicant(20+n);barrier=threading.Barrier(2)
+            def competing(actor,decision):
+                x=connect(db,api_user,api_password)
+                try:
+                    barrier.wait(timeout=5);decide(racing,actor=actor,decision=decision,note='Independent review',verified=True,conn=x);return True
+                except pymysql.MySQLError as e:
+                    if e.args[0]!=1644:raise
+                    return False
+                finally:x.close()
+            with ThreadPoolExecutor(2) as pool:
+                fs=[pool.submit(competing,a,'Approved'),pool.submit(competing,b,'Rejected')]
+                outcomes=[f.result(timeout=15) for f in fs]
+            status,active=query(c,'SELECT ApplicationStatus,IsActive FROM LECTURER_APPLICATION x JOIN USER_ACCOUNT u ON u.AccountID=x.AccountID WHERE ApplicationID=%s',(racing,))[0]
+            ok('Concurrent lecturer review has one consistent decision '+str(n+1),sum(outcomes)==1 and active==(status=='Approved'))
         api.close()
         # Fresh install follows the same canonical schema and procedures.
         fresh=db+'_fresh';fresh_role=role+'_fresh'
         install(c,(ROOT/'HallSync_Full_Setup.sql').read_text(),fresh,fresh_role);created.append(fresh);roles.append(fresh_role)
-        ok('Fresh installation creates 11 tables',scalar(c,"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE'",(fresh,))==11)
-        ok('Fresh installation creates 61 columns',len(metadata(c,fresh)['columns'])==61)
+        ok('Fresh installation creates 12 tables',scalar(c,"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE'",(fresh,))==12)
+        ok('Fresh installation creates 69 columns',len(metadata(c,fresh)['columns'])==69)
         query(c,'USE '+db)
         ok('No approved overlaps remain',scalar(c,"SELECT COUNT(*) FROM BOOKING x JOIN BOOKING y ON x.HallID=y.HallID AND x.BookingDate=y.BookingDate AND x.BookingID<y.BookingID AND x.StartTime<y.EndTime AND x.EndTime>y.StartTime WHERE x.BookingStatus='Approved' AND y.BookingStatus='Approved'")==0)
         report=dict(mysql_version=scalar(c,'SELECT VERSION()'),checks_passed=len(checks),checks=checks,
-          tables=11,columns_count=61,primary_keys=11,foreign_keys_count=14,unique_keys=7,check_constraints=28,views=4,procedures=27,
+          tables=12,columns_count=69,primary_keys=12,foreign_keys_count=16,unique_keys=8,check_constraints=32,views=4,procedures=30,
           concurrency={'approval_races':5,'approval_block_races':3,'lock_wait_checked':True},
           department_preserved=True,**m)
         (REPORT_DIR/'database_validation.json').write_text(json.dumps(report,indent=2,default=str))
