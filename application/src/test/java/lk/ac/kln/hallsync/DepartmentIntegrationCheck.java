@@ -86,7 +86,11 @@ public final class DepartmentIntegrationCheck {
             repository.add(student.getAccountId(), "Procedure bypass attempt");
             throw new AssertionError("The database must reject a non-admin actor");
         } catch (SQLException error) {
-            check("Stored procedure independently rejects a non-admin actor", "45000".equals(error.getSQLState()));
+            if (!"45000".equals(error.getSQLState())) {
+                throw new AssertionError("Unexpected procedure error: SQLState=" + error.getSQLState()
+                        + ", code=" + error.getErrorCode() + ", message=" + error.getMessage(), error);
+            }
+            check("Stored procedure independently rejects a non-admin actor", true);
         }
 
         expect("Null department name is rejected", IllegalArgumentException.class,

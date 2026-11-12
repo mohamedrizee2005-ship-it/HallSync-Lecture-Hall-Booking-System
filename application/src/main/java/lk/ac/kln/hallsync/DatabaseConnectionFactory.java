@@ -26,6 +26,9 @@ public final class DatabaseConnectionFactory {
         options.setProperty("forceConnectionTimeZoneToSession", "true");
         options.setProperty("connectTimeout", "5000");
         options.setProperty("socketTimeout", "10000");
+        // The limited login can execute routines but cannot read their bodies.
+        // Parameter positions and OUT types are supplied explicitly by our JDBC code.
+        options.setProperty("noAccessToProcedureBodies", "true");
         return DriverManager.getConnection(config.getUrl(), options);
     }
 }

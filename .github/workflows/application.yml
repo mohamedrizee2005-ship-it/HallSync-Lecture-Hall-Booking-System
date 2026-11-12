@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     strategy:
+      fail-fast: false
       matrix:
         java: ['21', '26']
     services:
