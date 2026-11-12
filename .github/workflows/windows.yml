@@ -1,0 +1,56 @@
+name: Check HallSync Windows launcher
+on:
+  push:
+    branches: [main, feature/premium-web]
+    paths:
+      - 'application/**'
+      - 'run_hallsync.cmd'
+      - '.github/workflows/windows.yml'
+permissions:
+  contents: read
+jobs:
+  launcher:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: maven
+          cache-dependency-path: application/pom.xml
+      - name: Launch the extracted project from a Windows path with spaces
+        shell: pwsh
+        env:
+          JAVA_TOOL_OPTIONS: -Dhallsync.noBrowser=true
+        run: |
+          $projectRoot = Join-Path $env:RUNNER_TEMP 'HallSync smoke project'
+          New-Item -ItemType Directory -Path $projectRoot | Out-Null
+          Copy-Item -Path "$env:GITHUB_WORKSPACE\*" -Destination $projectRoot -Recurse -Force
+          $stdout = Join-Path $env:RUNNER_TEMP 'hallsync-launcher.stdout.log'
+          $stderr = Join-Path $env:RUNNER_TEMP 'hallsync-launcher.stderr.log'
+          $process = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c run_hallsync.cmd --console' -WorkingDirectory $projectRoot -RedirectStandardOutput $stdout -RedirectStandardError $stderr -PassThru
+          try {
+            $address = $null
+            for ($attempt = 0; $attempt -lt 150; $attempt++) {
+              Start-Sleep -Seconds 2
+              $output = Get-Content $stdout -Raw -ErrorAction SilentlyContinue
+              if ($output -match 'HallSync is ready: (http://127\.0\.0\.1:\d+)') { $address = $Matches[1]; break }
+              if ($process.HasExited) { break }
+            }
+            if (!$address) { throw 'The Windows launcher did not reach the browser server.' }
+            $page = Invoke-WebRequest $address
+            if ($page.StatusCode -ne 200 -or $page.Content -notmatch 'University of Kelaniya') { throw 'The packaged browser page did not load.' }
+            $state = Invoke-RestMethod "$address/api/state"
+            if (!$state.ok -or $state.data.connected -or $null -ne $state.data.user) { throw 'Fresh local connection state was incorrect.' }
+            if (Test-Path "$projectRoot\application\db.local.properties") { throw 'Startup must not create a settings file before connection details are entered.' }
+            Write-Output 'PASS - Windows launcher builds and serves HallSync from a folder with spaces.'
+            Write-Output 'PASS - Fresh connection page loads without creating private settings.'
+          } finally {
+            if (!$process.HasExited) { taskkill /PID $process.Id /T /F | Out-Null }
+            if (Test-Path $stdout) { Get-Content $stdout }
+            if (Test-Path $stderr) { Get-Content $stderr }
+          }
