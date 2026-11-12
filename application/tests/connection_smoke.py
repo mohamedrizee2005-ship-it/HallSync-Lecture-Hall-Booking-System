@@ -18,6 +18,34 @@ db_checks = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(db_checks)
 
 
+def first_install_check(c,full_sql,suffix):
+    schema='hallsync_connection_first_'+suffix;role='hs_first_'+suffix
+    app_user='hs_first_app_'+suffix;owner='hs_first_owner_'+suffix
+    created=False
+    try:
+        normal=full_sql.replace('SET @hallsync_test_mode=COALESCE(@hallsync_test_mode,0);','SET @hallsync_test_mode=0;')
+        db_checks.install(c,normal,schema,role);created=True
+        assert db_checks.scalar(c,f'SELECT COUNT(*) FROM {schema}.USER_ACCOUNT')==0
+        app_password=db_checks.query(c,f"CREATE USER '{app_user}'@'%' IDENTIFIED BY RANDOM PASSWORD REQUIRE SSL")[0][2]
+        owner_password=db_checks.query(c,f"CREATE USER '{owner}'@'%' IDENTIFIED BY RANDOM PASSWORD REQUIRE SSL")[0][2]
+        db_checks.query(c,f"GRANT '{role}' TO '{app_user}'@'%'")
+        db_checks.query(c,f"SET DEFAULT ROLE '{role}' TO '{app_user}'@'%'")
+        db_checks.query(c,f"GRANT ALL PRIVILEGES ON {schema}.* TO '{owner}'@'%'")
+        with tempfile.TemporaryDirectory() as directory:
+            config=Path(directory)/'db.local.properties';config.write_text(f'db.url=jdbc:mysql://127.0.0.1:3306/{schema}\ndb.user={app_user}\n')
+            env=dict(os.environ,HALLSYNC_DB_PASSWORD=app_password,HALLSYNC_RUN_INTEGRATION_TESTS='1',HALLSYNC_BOOTSTRAP_TEST_USER=owner,HALLSYNC_BOOTSTRAP_TEST_PASSWORD=owner_password)
+            cp=os.pathsep.join([str(ROOT/'application/target/test-classes'),str(ROOT/'application/target/hallsync.jar')])
+            result=subprocess.run(['java','-cp',cp,'lk.ac.kln.hallsync.WebIntegrationCheck',str(config),'--first-install'],env=env,capture_output=True,text=True,timeout=90)
+            assert result.returncode==0,result.stdout+result.stderr
+            assert app_password not in result.stdout+result.stderr and owner_password not in result.stdout+result.stderr
+            print(result.stdout,end='')
+    finally:
+        db_checks.query(c,f"DROP USER IF EXISTS '{app_user}'@'%'")
+        db_checks.query(c,f"DROP USER IF EXISTS '{owner}'@'%'")
+        if created:db_checks.query(c,'DROP DATABASE IF EXISTS '+schema)
+        db_checks.query(c,f"DROP ROLE IF EXISTS '{role}'")
+
+
 def main():
     suffix = uuid.uuid4().hex[:10]
     schema = "hallsync_connection_" + suffix
@@ -29,6 +57,7 @@ def main():
     bootstrap_created = False
     try:
         full_sql=(ROOT/'database/HallSync_Setup.sql').read_text()
+        first_install_check(c,full_sql,suffix)
         upgrade_sql=full_sql
         db_checks.install(c,full_sql,schema,role)
         prior_hash=db_checks.scalar(c,f"SELECT PasswordHash FROM {schema}.USER_ACCOUNT WHERE Username='demo_lecturer'")

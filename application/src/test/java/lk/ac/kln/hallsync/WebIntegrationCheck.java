@@ -72,10 +72,27 @@ public final class WebIntegrationCheck {
         try { new WebServer(missing.resolve("missing.properties"),0,origin); }catch(IllegalStateException e) { rejected=true; }finally { Files.deleteIfExists(missing); }
         check("Shared access requires local database configuration first",rejected);
     }
+    private static void firstInstall(Path config) throws Exception {
+        applicationPassword="eight123";
+        try(WebServer server=new WebServer(config,0)) {
+            server.start();base=server.address();Browser browser=new Browser();browser.state();
+            DatabaseConfig cfg=DatabaseConfig.load(config);
+            Map<String,Object> form=new HashMap<>();form.put("databaseUser",cfg.getUsername());form.put("databasePassword",cfg.getPassword());form.put("fullName","First Administrator");form.put("email","first_admin@example.invalid");form.put("username","first_admin");form.put("password",applicationPassword);
+            browser.post("/api/setup/admin",form,400);check("Restricted login cannot initialize an administrator on an empty account table",true);
+            form.put("databaseUser",System.getenv("HALLSYNC_BOOTSTRAP_TEST_USER"));form.put("databasePassword",System.getenv("HALLSYNC_BOOTSTRAP_TEST_PASSWORD"));
+            int created=id(browser.post("/api/setup/admin",form,200));
+            var user=browser.login("first_admin",applicationPassword).getAsJsonObject("user");
+            check("First administrator can be created without synthetic seed accounts",created>0&&user.get("id").getAsInt()==created&&user.get("admin").getAsBoolean());
+            check("First administrator reaches protected management data",browser.get("/api/reference",200).getAsJsonObject().getAsJsonArray("halls").size()==14);
+            form.put("username","second_admin");form.put("email","second_admin@example.invalid");browser.post("/api/setup/admin",form,200);check("Privileged setup also works when an administrator already exists",true);
+            check("Privileged database credentials are not written to the local connection file",!Files.readString(config).contains(System.getenv("HALLSYNC_BOOTSTRAP_TEST_PASSWORD")));
+        }
+    }
     public static void main(String[] args) throws Exception {
         if(!"1".equals(System.getenv("HALLSYNC_RUN_INTEGRATION_TESTS")))throw new IllegalStateException("Explicit test enablement required.");
         DatabaseConfig cfg=DatabaseConfig.load(Path.of(args[0]));
         try(var c=new DatabaseConnectionFactory(cfg).open()) { if(!c.getCatalog().startsWith("hallsync_connection_"))throw new IllegalStateException("Disposable schema required."); }
+        if(args.length>1&&args[1].equals("--first-install")){firstInstall(Path.of(args[0]));return;}
         applicationPassword=System.getenv("HALLSYNC_APPLICATION_TEST_PASSWORD");
         try(WebServer server=new WebServer(Path.of(args[0]),0)) {
             server.start();base=server.address();Browser admin=new Browser();
