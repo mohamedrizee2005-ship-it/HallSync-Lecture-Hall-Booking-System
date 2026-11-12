@@ -55,7 +55,7 @@ def main():
         password=None
         for sql in db_checks.statements(login_sql):
             rows=db_checks.query(c,sql)
-            if sql.startswith('CALL _hs_connection_setup'):
+            if sql.startswith('CREATE USER'):
                 user_created=True
                 assert rows and len(rows[0])==3,'Installer must return a generated login password'
                 password=rows[0][2]

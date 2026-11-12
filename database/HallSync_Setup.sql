@@ -5,7 +5,6 @@
 -- Enable Stop Script Execution On Errors. Back up an existing installation before upgrading.
 -- University capacities are published reference data, not a live timetable or safety certification.
 SET @hallsync_test_mode=COALESCE(@hallsync_test_mode,0);
-SET @hallsync_manage_login=COALESCE(@hallsync_manage_login,1);
 -- SECTION 1: CREATE / SELECT THE DATABASE
 CREATE DATABASE IF NOT EXISTS hallsync_db
     CHARACTER SET utf8mb4
@@ -1394,17 +1393,8 @@ SELECT k.BookingID,k.ExpectedAttendance,h.Capacity FROM BOOKING k JOIN LECTURE_H
 WHERE k.BookingStatus='Approved' AND TIMESTAMP(k.BookingDate,k.EndTime)>CURRENT_TIMESTAMP AND (k.ExpectedAttendance>h.Capacity OR h.OperationalStatus<>'Active');
 
 -- SECTION 9: LOCAL CONNECTION LOGIN (existing passwords are never reset)
-DELIMITER $$
-DROP PROCEDURE IF EXISTS _hs_connection_setup$$
-CREATE PROCEDURE _hs_connection_setup()
-BEGIN
- IF @hallsync_manage_login=1 THEN
-  CREATE USER IF NOT EXISTS 'hallsync_app'@'127.0.0.1' IDENTIFIED BY RANDOM PASSWORD REQUIRE SSL;
-  GRANT 'hallsync_application' TO 'hallsync_app'@'127.0.0.1';
-  SET DEFAULT ROLE 'hallsync_application' TO 'hallsync_app'@'127.0.0.1';
- END IF;
-END$$
-CALL _hs_connection_setup()$$
-DROP PROCEDURE _hs_connection_setup$$
-DELIMITER ;
+-- Keep CREATE USER as a direct statement so Workbench can display its generated password.
+CREATE USER IF NOT EXISTS 'hallsync_app'@'127.0.0.1' IDENTIFIED BY RANDOM PASSWORD REQUIRE SSL;
+GRANT 'hallsync_application' TO 'hallsync_app'@'127.0.0.1';
+SET DEFAULT ROLE 'hallsync_application' TO 'hallsync_app'@'127.0.0.1';
 SELECT 'HallSync 3.0 ready. Keep any generated password private. Restart run_hallsync.cmd.' AS SetupResult;

@@ -52,6 +52,7 @@ def statements(text):
     if buf:raise ValueError('Unterminated SQL at end')
 def install(c,text,schema,role):
     query(c,'SET @hallsync_test_mode=1,@hallsync_manage_login=0')
+    text=text.split('-- SECTION 9:',1)[0]
     text=text.replace('hallsync_db',schema).replace('hallsync_application',role)
     for command in statements(text):
         try:query(c,command)
