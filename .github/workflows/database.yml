@@ -1,7 +1,7 @@
 name: Validate HallSync database
 on:
   push:
-    branches: [main, release/project-cleanup]
+    branches: [main, feature/premium-web]
     paths:
       - 'database/**'
       - '.github/workflows/database.yml'

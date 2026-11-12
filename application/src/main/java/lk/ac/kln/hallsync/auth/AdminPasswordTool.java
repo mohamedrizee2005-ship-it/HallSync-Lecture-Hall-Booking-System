@@ -17,7 +17,7 @@ public final class AdminPasswordTool {
         char[] second = null;
         boolean failed = false;
         try {
-            first = console.readPassword("New application-admin password (15-128 characters): ");
+            first = console.readPassword("New application-admin password (8-128 characters): ");
             second = console.readPassword("Repeat password: ");
             validateNewPassword(first);
             if (!Arrays.equals(first, second)) {
@@ -39,8 +39,8 @@ public final class AdminPasswordTool {
 
     public static void validateNewPassword(char[] value) {
         int length = value == null ? 0 : Character.codePointCount(value, 0, value.length);
-        if (length < 15 || length > 128) {
-            throw new IllegalArgumentException("Use a password or passphrase of 15-128 characters.");
+        if (length < 8 || length > 128) {
+            throw new IllegalArgumentException("Use a password or passphrase of 8-128 characters.");
         }
         boolean onlyWhitespace = true;
         for (char character : value) {

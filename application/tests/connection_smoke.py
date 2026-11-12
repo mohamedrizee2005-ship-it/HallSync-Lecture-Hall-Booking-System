@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import uuid
 import zipfile
+from browser_checks import run as browser_checks
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("database_checks", ROOT / "database/tests/run_checks.py")
@@ -24,6 +25,8 @@ def main():
     user = "hs_java_" + suffix
     c = db_checks.connect()
     user_created = False
+    bootstrap_user = "hs_bootstrap_" + suffix
+    bootstrap_created = False
     try:
         db_checks.install(c, (ROOT / "database/HallSync_Full_Setup.sql").read_text(), schema, role)
         login_sql = (ROOT / "database/Create_Application_Login.sql").read_text()
@@ -89,10 +92,15 @@ def main():
             fixture_reviewer = db_checks.scalar(c,f"SELECT AccountID FROM {schema}.USER_ACCOUNT WHERE Username='ci_admin'")
             db_checks.query(c,f"INSERT INTO {schema}.BOOKING(RequesterID,HallID,BookingDate,StartTime,EndTime,Purpose,BookingType,ExpectedAttendance,BookingStatus,RequestedAt,ReviewerID,Decision,ReviewedAt) VALUES(%s,%s,%s,'08:00','09:00','CI ended approved session','Event',10,'Approved',%s,%s,'Approved',%s)",
                             (fixture_requester,fixture_hall,ended_day,str(ended_day)+' 06:00:00',fixture_reviewer,str(ended_day)+' 07:00:00'))
+            bootstrap_rows = db_checks.query(c,f"CREATE USER '{bootstrap_user}'@'%' IDENTIFIED BY RANDOM PASSWORD REQUIRE SSL")
+            bootstrap_created = True
+            bootstrap_password = bootstrap_rows[0][2]
+            db_checks.query(c,f"GRANT ALL PRIVILEGES ON {schema}.* TO '{bootstrap_user}'@'%'")
             classpath = os.pathsep.join([str(ROOT / 'application/target/test-classes'),
                                         str(ROOT / 'application/target/hallsync.jar')])
             feature_env = dict(env, HALLSYNC_RUN_INTEGRATION_TESTS='1',
-                               HALLSYNC_APPLICATION_TEST_PASSWORD=application_password)
+                               HALLSYNC_APPLICATION_TEST_PASSWORD=application_password,
+                               HALLSYNC_BOOTSTRAP_TEST_USER=bootstrap_user,HALLSYNC_BOOTSTRAP_TEST_PASSWORD=bootstrap_password)
             feature = subprocess.run(['java','-cp',classpath,'lk.ac.kln.hallsync.DepartmentIntegrationCheck',str(config)],
                                      env=feature_env,capture_output=True,text=True,timeout=120)
             assert feature.returncode == 0, feature.stdout + feature.stderr
@@ -109,19 +117,23 @@ def main():
             assert workflows.returncode == 0, workflows.stdout + workflows.stderr
             assert password not in workflows.stdout + workflows.stderr and application_password not in workflows.stdout + workflows.stderr
             print(workflows.stdout,end='')
-            desktop = subprocess.run(['xvfb-run','-a','java','-cp',classpath,'lk.ac.kln.hallsync.DesktopSmokeCheck',str(config)],
-                                     cwd=ROOT,env=feature_env,capture_output=True,text=True,timeout=180)
-            assert desktop.returncode == 0, desktop.stdout + desktop.stderr
-            assert password not in desktop.stdout + desktop.stderr and application_password not in desktop.stdout + desktop.stderr
-            print(desktop.stdout,end='')
+            web = subprocess.run(['java','-cp',classpath,'lk.ac.kln.hallsync.WebIntegrationCheck',str(config)],
+                                 cwd=ROOT,env=feature_env,capture_output=True,text=True,timeout=180)
+            assert web.returncode == 0, web.stdout + web.stderr
+            assert password not in web.stdout + web.stderr and application_password not in web.stdout + web.stderr
+            assert bootstrap_password not in web.stdout + web.stderr
+            print(web.stdout,end='')
+            browser = browser_checks(config,feature_env)
             workflow_checks = [line.removeprefix('PASS - ') for line in workflows.stdout.splitlines() if line.startswith('PASS - ')]
-            desktop_checks = [line.removeprefix('PASS - ') for line in desktop.stdout.splitlines() if line.startswith('PASS - ')]
+            web_checks = [line.removeprefix('PASS - ') for line in web.stdout.splitlines() if line.startswith('PASS - ')]
             complete_report = dict(java_version=java_version,mysql_version=report['mysql_version'],
-                                   department_checks=passed,workflow_checks=workflow_checks,desktop_checks=desktop_checks,
-                                   total_checks=len(passed)+len(workflow_checks)+len(desktop_checks),read_upgrade_preserves_data=True)
+                                   department_checks=passed,workflow_checks=workflow_checks,web_checks=web_checks,browser_checks=browser,
+                                   total_checks=len(passed)+len(workflow_checks)+len(web_checks)+len(browser),read_upgrade_preserves_data=True)
             (ROOT/'application/target/application-validation.json').write_text(json.dumps(complete_report,indent=2))
         print("JDBC integration passed: generated login, default role, encrypted connection, timezone, department read, invalid-password rejection and missing-config handling.")
     finally:
+        if bootstrap_created:
+            db_checks.query(c,f"DROP USER IF EXISTS '{bootstrap_user}'@'%'")
         if user_created:
             db_checks.query(c, f"DROP USER IF EXISTS '{user}'@'%'")
         # Names are unique to this invocation; never delete hallsync_db.

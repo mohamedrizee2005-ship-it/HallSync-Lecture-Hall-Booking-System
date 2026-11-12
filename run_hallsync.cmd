@@ -11,7 +11,7 @@ if errorlevel 1 goto missing_maven
 echo Building HallSync. The first build needs internet access for Maven dependencies.
 call mvn -B -ntp clean package
 if errorlevel 1 goto build_failed
-echo Opening HallSync. Keep your database passwords private.
+echo Opening HallSync in your browser. Keep this window open while using it.
 java -jar "target\hallsync.jar"
 if errorlevel 1 goto app_failed
 exit /b 0

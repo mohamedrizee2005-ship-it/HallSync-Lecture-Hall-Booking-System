@@ -146,11 +146,11 @@ public final class DepartmentIntegrationCheck {
         check("Java-generated hash verifies", hashes.verify(password, hash1));
         check("Wrong password fails Java hash verification", !hashes.verify("wrong".toCharArray(), hash1));
         check("Non-Argon2id stored values are rejected", !hashes.verify(password, "plain_text"));
-        expect("Setup password shorter than 15 characters is rejected", IllegalArgumentException.class,
-                () -> AdminPasswordTool.validateNewPassword("too short".toCharArray()));
-        AdminPasswordTool.validateNewPassword("a".repeat(15).toCharArray());
+        expect("Setup password shorter than 8 characters is rejected", IllegalArgumentException.class,
+                () -> AdminPasswordTool.validateNewPassword("short".toCharArray()));
+        AdminPasswordTool.validateNewPassword("a".repeat(8).toCharArray());
         AdminPasswordTool.validateNewPassword("a".repeat(128).toCharArray());
-        check("Setup accepts its 15 and 128 character boundaries", true);
+        check("Setup accepts its 8 and 128 character boundaries", true);
         expect("Setup password over 128 characters is rejected", IllegalArgumentException.class,
                 () -> AdminPasswordTool.validateNewPassword("a".repeat(129).toCharArray()));
         expect("Whitespace-only setup password is rejected", IllegalArgumentException.class,

@@ -3,7 +3,7 @@
   "configurations": [
     {
       "type": "java",
-      "name": "HallSync: Full desktop application",
+      "name": "HallSync: Browser application",
       "request": "launch",
       "mainClass": "lk.ac.kln.hallsync.HallSyncApp",
       "cwd": "${workspaceFolder}/application",

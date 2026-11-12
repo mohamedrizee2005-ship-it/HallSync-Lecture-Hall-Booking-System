@@ -1,33 +1,25 @@
 package lk.ac.kln.hallsync;
 
-import lk.ac.kln.hallsync.desktop.*;
-import javax.swing.*;
+import lk.ac.kln.hallsync.web.WebServer;
+import java.awt.Desktop;
+import java.net.BindException;
 import java.nio.file.Path;
-import java.nio.file.Files;
 
-/** Desktop entry point. Run with application as the working directory. */
+/** Starts the local Java backend and opens the bundled browser interface. */
 public final class HallSyncApp {
     private HallSyncApp() { }
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            DesktopTheme.apply();
-            try {
-                Path file=Path.of(args.length==0 ? "db.local.properties" : args[0]);
-                DatabaseConfig config;
-                if (Files.exists(file)) {
-                    config=DatabaseConfig.load(file);
-                } else {
-                    ConnectionSetupDialog setup=new ConnectionSetupDialog(file); setup.setVisible(true);
-                    if (setup.configuration().isEmpty()) { return; }
-                    config=setup.configuration().get();
-                }
-                ApplicationServices app=new ApplicationServices(new DatabaseConnectionFactory(config));
-                showLogin(app);
-            } catch (Exception error) { UiErrors.show(null,error); }
-        });
-    }
-    private static void showLogin(ApplicationServices app) {
-        LoginDialog login=new LoginDialog(app); login.setVisible(true);
-        login.identity().ifPresent(user -> new DashboardFrame(app,user,() -> showLogin(app)).open());
+        try {
+            Path file=Path.of(args.length==0?"db.local.properties":args[0]);
+            int preferred=Integer.parseInt(System.getProperty("hallsync.port","8080"));
+            WebServer server;
+            try { server=new WebServer(file,preferred); } catch(BindException busy) { server=new WebServer(file,0); }
+            server.start();WebServer running=server;Runtime.getRuntime().addShutdownHook(new Thread(running::close));
+            System.out.println("HallSync is ready: "+server.address());
+            System.out.println("Keep this window open while using HallSync. Press Ctrl+C to stop.");
+            if(!Boolean.getBoolean("hallsync.noBrowser")&&Desktop.isDesktopSupported()&&Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                try { Desktop.getDesktop().browse(server.address()); } catch(Exception unavailable) { System.out.println("Open the address above in your browser."); }
+            }
+        } catch(Exception error) { System.err.println("HallSync could not start. Check Java, MySQL and the local configuration.");System.exit(1); }
     }
 }

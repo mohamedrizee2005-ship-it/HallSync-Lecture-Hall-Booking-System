@@ -1,7 +1,7 @@
 name: Check HallSync Java application
 on:
   push:
-    branches: [main, release/project-cleanup]
+    branches: [main, feature/premium-web]
     paths:
       - 'application/**'
       - 'database/*.sql'
@@ -44,13 +44,12 @@ jobs:
           cache-dependency-path: application/pom.xml
       - name: Build the Java classes
         run: mvn -B -ntp -f application/pom.xml clean package
-      - name: Install virtual display for real Swing checks
-        run: sudo apt-get update -qq && sudo apt-get install -y xvfb
       - name: Install database test helpers
         run: |
           python3 -m venv .venv
-          .venv/bin/pip install PyMySQL==1.1.1 argon2-cffi==25.1.0
-      - name: Test JDBC, application workflows and Swing screens
+          .venv/bin/pip install PyMySQL==1.1.1 argon2-cffi==25.1.0 playwright==1.65.1
+          .venv/bin/python -m playwright install --with-deps chromium
+      - name: Test JDBC, HTTP security, workflows and browser UI
         env:
           HALLSYNC_TEST_HOST: 127.0.0.1
           HALLSYNC_TEST_USER: root
@@ -61,4 +60,4 @@ jobs:
           name: application-validation-java-${{ matrix.java }}
           path: |
             application/target/*validation.json
-            application/target/desktop-*.png
+            application/target/web-*.png
