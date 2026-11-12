@@ -4,6 +4,8 @@ A browser-based lecture hall booking workspace for the Faculty of Science, Unive
 
 **Java OOP backend · HTML, CSS & JavaScript interface · MySQL**
 
+![HallSync dark sign-in](.github/assets/hallsync-dark.webp)
+
 ## Features
 
 - Responsive room discovery with date, time, capacity and building filters.

@@ -1,4 +1,4 @@
-"""Restore licensed, unchanged campus photographs from their recorded source URLs."""
+"""Restore licensed campus photographs from their recorded source URLs."""
 import json,urllib.request,urllib.error,time
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]

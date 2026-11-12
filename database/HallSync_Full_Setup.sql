@@ -905,8 +905,8 @@ FROM BOOKING WHERE BookingStatus IN ('Approved','Completed') GROUP BY HallID,Boo
 -- ReservedMinutes is scheduled time, not measured actual use or student attendance.
 
 
--- SECTION 6: SYNTHETIC DEMONSTRATION DATA
--- Synthetic reference data for SQL demonstrations. Existing matching rows are preserved.
+-- SECTION 6: CAMPUS REFERENCE DATA AND SYNTHETIC FIXTURES
+-- Source-linked campus names and labelled synthetic fixtures. Existing matching rows are preserved.
 -- Random discarded passwords are used for the demo account hashes; these are not login-ready accounts.
 -- Real accounts and timetable reservations must be provisioned before real availability is trusted.
 USE hallsync_db;
