@@ -129,7 +129,7 @@ public final class ApiHandler implements HttpHandler {
         if(path.equals("/api/blocks/cancel")) { app.blocks.cancel(user,integer(b,"id"));return Map.of("saved",true); }
         AccessRules.administrator(user);
         return switch(path) {
-            case "/api/catalog/departments" -> app.departments.add(user,text(b,"name"));
+            case "/api/catalog/departments" -> Map.of("id",app.departments.add(user,text(b,"name")).getDepartmentId());
             case "/api/catalog/buildings" -> Map.of("id",app.catalog.addBuilding(user,text(b,"code"),text(b,"name"),optionalText(b,"location")));
             case "/api/catalog/facilities" -> Map.of("id",app.catalog.addFacility(user,text(b,"name"),optionalText(b,"description")));
             case "/api/catalog/courses" -> Map.of("id",app.catalog.addCourse(user,integer(b,"departmentId"),text(b,"code"),text(b,"title")));

@@ -44,7 +44,7 @@ def main():
         with zipfile.ZipFile(ROOT/"application/target/hallsync.jar") as archive:
             manifest=archive.read("META-INF/MANIFEST.MF").decode()
             assert "Main-Class: lk.ac.kln.hallsync.HallSyncApp" in manifest
-        print("Executable JAR manifest points to the HallSync desktop.")
+        print("Executable JAR manifest points to the HallSync browser launcher.")
         with tempfile.TemporaryDirectory() as directory:
             config = Path(directory) / "db.local.properties"
             config.write_text(
