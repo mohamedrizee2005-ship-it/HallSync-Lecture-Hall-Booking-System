@@ -19,7 +19,7 @@ public final class ServerState {
         }
     }
     public boolean lecturerRegistrationEnabled() { return lecturerRegistrationEnabled; }
-    private void checkLecturerUpgrade() { try { lecturerRegistrationEnabled=app.lecturerApplications.installed(); }catch(Exception e) { lecturerRegistrationEnabled=false; } }
+    private void checkLecturerUpgrade() { try { lecturerRegistrationEnabled=app.accountApplications.installed(); }catch(Exception e) { lecturerRegistrationEnabled=false; } }
     public boolean ready() { return app!=null; }
     public boolean hasFile() { return Files.exists(file); }
     public String problem() { return problem; }

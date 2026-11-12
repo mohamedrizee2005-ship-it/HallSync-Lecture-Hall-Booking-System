@@ -9,7 +9,7 @@ for photo in data['photos']:
     if target.exists():
         assert target.read_bytes().startswith(b'\xff\xd8'), 'Invalid bundled JPEG: '+photo['file']
         continue
-    request=urllib.request.Request(photo['download'],headers={'User-Agent':'HallSync/2.1 (University campus booking project; Wikimedia licensed asset restore)'})
+    request=urllib.request.Request(photo['download'],headers={'User-Agent':'HallSync/3.0 (University campus booking project; Wikimedia licensed asset restore)'})
     for attempt in range(2):
         try:
             with urllib.request.urlopen(request,timeout=45) as response:

@@ -60,6 +60,10 @@ public final class JdbcCatalogRepository implements CatalogRepository {
     @Override public int addHall(int actor, int building, String number, String floor, int capacity) throws SQLException {
         return db.callForId("{CALL sp_add_hall(?,?,?,?,?,?)}", actor, building, number, floor, capacity);
     }
+    @Override public void editHall(int actor,int hall,int building,String number,String floor,int capacity,String status) throws SQLException {
+        db.call("{CALL sp_edit_hall(?,?,?,?,?,?,?)}",actor,hall,building,number,floor,capacity,status);
+    }
+    @Override public void removeHall(int actor,int hall) throws SQLException { db.call("{CALL sp_remove_hall(?,?)}",actor,hall); }
     @Override public void updateHall(int actor, int hall, int capacity, String status) throws SQLException {
         db.call("{CALL sp_update_hall(?,?,?,?)}", actor, hall, capacity, status);
     }

@@ -14,6 +14,12 @@ public final class AuthenticationService {
         this.passwords = Objects.requireNonNull(passwords);
     }
 
+    /** Existing sessions lose access immediately after an account is disabled or its role changes. */
+    public boolean stillValid(AuthenticatedUser user) throws SQLException {
+        var found=accounts.findForLogin(user.getUsername());
+        return found.isPresent() && found.get().isActive() && found.get().getAccountId()==user.getAccountId() && found.get().getRole().equals(user.getRole());
+    }
+
     public Optional<AuthenticatedUser> signIn(String username, char[] password) throws SQLException {
         if (username == null || username.isBlank() || password == null || password.length == 0) {
             return Optional.empty();

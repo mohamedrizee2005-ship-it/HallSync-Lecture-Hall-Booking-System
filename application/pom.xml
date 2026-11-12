@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>lk.ac.kln.hallsync</groupId>
     <artifactId>hallsync</artifactId>
-    <version>2.2.0</version>
+    <version>3.0.0</version>
     <name>HallSync</name>
     <description>Lecture hall booking management system</description>
     <properties>

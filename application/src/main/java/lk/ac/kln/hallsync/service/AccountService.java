@@ -22,6 +22,12 @@ public final class AccountService {
         AccountDraft clean = validate(details); AdminPasswordTool.validateNewPassword(password);
         return repository.provision(actor,clean,passwords.hash(password),role);
     }
+    public void manage(AuthenticatedUser user,int account,String role,boolean active) throws SQLException {
+        int actor=AccessRules.administrator(user);Validation.positive(account,"Account");
+        if(actor==account)throw new IllegalArgumentException("You cannot change your own access.");
+        if(!Set.of("Student","Lecturer","AdminStaff").contains(role==null?"":role))throw new IllegalArgumentException("Choose a valid role.");
+        repository.manage(actor,account,role,active);
+    }
     public List<AccountSummary> list(AuthenticatedUser user, Integer department) throws SQLException {
         int actor = AccessRules.administrator(user); return repository.list(actor,Validation.optionalId(department,"Department"));
     }

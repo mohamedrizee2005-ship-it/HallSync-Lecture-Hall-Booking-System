@@ -2,16 +2,16 @@ package lk.ac.kln.hallsync.service;
 
 import lk.ac.kln.hallsync.auth.*;
 import lk.ac.kln.hallsync.model.*;
-import lk.ac.kln.hallsync.repository.LecturerApplicationRepository;
+import lk.ac.kln.hallsync.repository.AccountApplicationRepository;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
 /** Verification applications never grant access until an authorised review commits. */
-public final class LecturerApplicationService {
-    private final LecturerApplicationRepository repository;
+public final class AccountApplicationService {
+    private final AccountApplicationRepository repository;
     private final PasswordHasher passwords;
-    public LecturerApplicationService(LecturerApplicationRepository repository,PasswordHasher passwords) { this.repository=repository;this.passwords=passwords; }
+    public AccountApplicationService(AccountApplicationRepository repository,PasswordHasher passwords) { this.repository=repository;this.passwords=passwords; }
     public boolean installed() throws SQLException { return repository.installed(); }
     public int register(AccountDraft details,String staffId,char[] password) throws SQLException {
         AccountDraft clean=AccountService.validate(details);
@@ -21,7 +21,7 @@ public final class LecturerApplicationService {
         AdminPasswordTool.validateNewPassword(password);
         return repository.register(clean,staff,passwords.hash(password));
     }
-    public List<LecturerApplication> list(AuthenticatedUser user,String status) throws SQLException {
+    public List<AccountApplication> list(AuthenticatedUser user,String status) throws SQLException {
         int actor=AccessRules.administrator(user);
         if(status!=null&&!Set.of("Pending","Approved","Rejected").contains(status))throw new IllegalArgumentException("Choose a valid application status.");
         return repository.list(actor,status);

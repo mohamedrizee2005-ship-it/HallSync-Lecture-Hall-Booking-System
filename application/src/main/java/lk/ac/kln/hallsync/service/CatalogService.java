@@ -46,6 +46,12 @@ public final class CatalogService {
         return repository.addHall(actor, Validation.positive(building,"Building"), Validation.text(number,"Hall number",20),
                 Validation.optional(floor,"Floor",10), Validation.positive(capacity,"Capacity"));
     }
+    public void editHall(AuthenticatedUser user,int hall,int building,String number,String floor,int capacity,String status) throws SQLException {
+        int actor=AccessRules.administrator(user);
+        if(!"Active".equals(status)&&!"Inactive".equals(status))throw new IllegalArgumentException("Choose Active or Inactive.");
+        repository.editHall(actor,Validation.positive(hall,"Hall"),Validation.positive(building,"Building"),Validation.text(number,"Hall number",20),Validation.optional(floor,"Floor",10),Validation.positive(capacity,"Capacity"),status);
+    }
+    public void removeHall(AuthenticatedUser user,int hall) throws SQLException { repository.removeHall(AccessRules.administrator(user),Validation.positive(hall,"Hall")); }
     public void updateHall(AuthenticatedUser user, int hall, int capacity, String status) throws SQLException {
         int actor = AccessRules.administrator(user);
         if (!"Active".equals(status) && !"Inactive".equals(status)) { throw new IllegalArgumentException("Choose Active or Inactive."); }

@@ -1,39 +1,39 @@
 @echo off
 setlocal
-title HallSync - Lecture Hall Booking System
+if /i "%~1"=="--console" goto launch
+cmd /k ""%~f0" --console"
+exit /b
+:launch
+title HallSync - University of Kelaniya
 cd /d "%~dp0application"
+if errorlevel 1 goto missing_folder
 where /q java
 if errorlevel 1 goto missing_java
 where /q javac
 if errorlevel 1 goto missing_java
 where /q mvn
 if errorlevel 1 goto missing_maven
-echo Building HallSync. The first build needs internet access for Maven dependencies.
+echo Building HallSync. The first build needs internet access.
 call mvn -B -ntp clean package
 if errorlevel 1 goto build_failed
-echo Opening HallSync in your browser. Keep this window open while using it.
+echo Starting HallSync. Keep this window open.
 java -jar "target\hallsync.jar"
-if errorlevel 1 goto app_failed
-exit /b 0
-
+echo HallSync stopped. Read any error above. Keep passwords private.
+pause
+exit /b
+:missing_folder
+echo Extract the whole ZIP first. The application folder must be beside this launcher.
+pause
+exit /b 1
 :missing_java
-echo Java JDK was not found. Check java -version and javac -version in a new terminal.
-echo See README.md. Your existing JDK installation can be reused.
+echo Java JDK is missing from PATH. Check java -version and javac -version.
 pause
 exit /b 1
-
 :missing_maven
-echo Maven was not found. Add its bin folder to PATH and open a new terminal.
-echo Check mvn -version. See README.md for the startup order.
+echo Maven is missing from PATH. Check mvn -version in a new Command Prompt.
 pause
 exit /b 1
-
 :build_failed
-echo The build stopped. Read the Maven error above; check the internet connection and JDK.
-pause
-exit /b 1
-
-:app_failed
-echo HallSync stopped. Keep the error above when asking for help; keep passwords private.
+echo The build stopped. Read the Maven error above. Check internet access and your JDK.
 pause
 exit /b 1

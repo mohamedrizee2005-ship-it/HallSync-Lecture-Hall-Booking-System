@@ -7,5 +7,6 @@ import java.util.List;
 public interface AccountManagementRepository {
     int registerStudent(AccountDraft details, String passwordHash) throws SQLException;
     int provision(int actor, AccountDraft details, String passwordHash, String role) throws SQLException;
+    void manage(int actor,int account,String role,boolean active) throws SQLException;
     List<AccountSummary> list(int actor, Integer department) throws SQLException;
 }

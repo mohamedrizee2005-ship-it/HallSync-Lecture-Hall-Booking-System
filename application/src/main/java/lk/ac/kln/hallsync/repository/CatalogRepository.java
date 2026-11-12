@@ -19,6 +19,8 @@ public interface CatalogRepository {
     int addCourse(int actor, int department, String code, String title) throws SQLException;
     int addGroup(int actor, int department, String name, int intake, int year) throws SQLException;
     int addHall(int actor, int building, String number, String floor, int capacity) throws SQLException;
+    void editHall(int actor,int hall,int building,String number,String floor,int capacity,String status) throws SQLException;
+    void removeHall(int actor,int hall) throws SQLException;
     void updateHall(int actor, int hall, int capacity, String status) throws SQLException;
     void setEquipment(int actor, int hall, int facility, int quantity, int working) throws SQLException;
 }

@@ -43,6 +43,7 @@ public final class ApiHandler implements HttpHandler {
                 send(x,200,post(x,session,parsed.getAsJsonObject()));
             } else if(x.getRequestMethod().equals("GET")) {
                 if(x.getRequestURI().getPath().equals("/api/reports/download")) { download(x,session);return; }
+                if(x.getRequestURI().getPath().equals("/api/calendar")) { calendar(x,session);return; }
                 send(x,200,get(x,session));
             } else { x.getResponseHeaders().set("Allow","GET, POST");throw new HttpError(405,"This action is not supported."); }
         } catch(HttpError e) { sendError(x,e.status(),e.getMessage()); }
@@ -76,10 +77,11 @@ public final class ApiHandler implements HttpHandler {
             case "/api/bookings/groups" -> app.bookings.groupsForEdit(user,Integer.parseInt(q.get("id")));
             case "/api/schedule" -> app.bookings.schedule(user,LocalDate.parse(q.get("from")),LocalDate.parse(q.get("to")));
             case "/api/availability" -> app.catalog.available(user,LocalDate.parse(q.get("date")),LocalTime.parse(q.get("start")),LocalTime.parse(q.get("end")),Integer.parseInt(q.get("attendance")));
-            case "/api/lecturer-applications" -> state.app().lecturerApplications.list(user,optionalQuery(q,"status"));
+            case "/api/room-issues" -> app.issues.list(user);
+            case "/api/account-applications", "/api/lecturer-applications" -> state.app().accountApplications.list(user,optionalQuery(q,"status"));
             case "/api/accounts" -> app.accounts.list(user,nullableInteger(q.get("department")));
             case "/api/blocks" -> app.blocks.list(user);
-            case "/api/reports" -> app.reports.load(user,ReportKind.valueOf(q.get("kind")));
+            case "/api/reports" -> app.reports.load(user,ReportKind.valueOf(q.get("kind")),queryDate(q,"from"),queryDate(q,"to"));
             default -> throw new HttpError(404,"This page was not found.");
         };
     }
@@ -110,7 +112,7 @@ public final class ApiHandler implements HttpHandler {
         if(path.equals("/api/auth/register-lecturer")) {
             if(!state.lecturerRegistrationEnabled())throw new HttpError(503,"Lecturer registration is not enabled yet. Ask your administrator to install the lecturer approval update.");
             char[] password=text(b,"password").toCharArray();
-            try { return Map.of("id",state.app().lecturerApplications.register(account(b),text(b,"staffId"),password),"status","Pending"); }
+            try { return Map.of("id",state.app().accountApplications.register(account(b),text(b,"staffId"),password),"status","Pending"); }
             finally { Arrays.fill(password,'\0'); }
         }
         if(path.equals("/api/auth/register")) {
@@ -120,9 +122,15 @@ public final class ApiHandler implements HttpHandler {
         }
         if(path.equals("/api/auth/logout"))return snapshot(sessions.rotate(x,s,null));
         AuthenticatedUser user=require(s);var app=state.app();
-        if(path.equals("/api/lecturer-applications/review")) {
+        if(path.equals("/api/room-issues"))return Map.of("id",app.issues.report(user,integer(b,"hallId"),text(b,"category"),text(b,"details")));
+        if(path.equals("/api/room-issues/resolve")){app.issues.resolve(user,integer(b,"id"),text(b,"note"));return Map.of("saved",true);}
+        if(path.equals("/api/accounts/manage")){
+            JsonElement active=b.get("active");if(active==null||!active.isJsonPrimitive()||!active.getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("Choose an active state.");
+            app.accounts.manage(user,integer(b,"id"),text(b,"role"),active.getAsBoolean());return Map.of("saved",true);
+        }
+        if(path.equals("/api/account-applications/review")||path.equals("/api/lecturer-applications/review")) {
             JsonElement verified=b.get("identityVerified");boolean confirmed=verified!=null&&verified.isJsonPrimitive()&&verified.getAsJsonPrimitive().isBoolean()&&verified.getAsBoolean();
-            app.lecturerApplications.review(user,integer(b,"id"),text(b,"decision"),optionalText(b,"note"),confirmed);
+            app.accountApplications.review(user,integer(b,"id"),text(b,"decision"),optionalText(b,"note"),confirmed);
             return Map.of("saved",true);
         }
         if(path.equals("/api/campus/import"))return CampusDirectory.install(app,user);
@@ -156,17 +164,29 @@ public final class ApiHandler implements HttpHandler {
             case "/api/catalog/courses" -> Map.of("id",app.catalog.addCourse(user,integer(b,"departmentId"),text(b,"code"),text(b,"title")));
             case "/api/catalog/groups" -> Map.of("id",app.catalog.addGroup(user,integer(b,"departmentId"),text(b,"name"),integer(b,"intakeYear"),integer(b,"studyYear")));
             case "/api/catalog/halls" -> Map.of("id",app.catalog.addHall(user,integer(b,"buildingId"),text(b,"number"),optionalText(b,"floor"),integer(b,"capacity")));
+            case "/api/catalog/hall-edit" -> {app.catalog.editHall(user,integer(b,"hallId"),integer(b,"buildingId"),text(b,"number"),optionalText(b,"floor"),integer(b,"capacity"),text(b,"status"));yield Map.of("saved",true);}
+            case "/api/catalog/hall-remove" -> {app.catalog.removeHall(user,integer(b,"hallId"));yield Map.of("saved",true);}
             case "/api/catalog/hall-status" -> { app.catalog.updateHall(user,integer(b,"hallId"),integer(b,"capacity"),text(b,"status"));yield Map.of("saved",true); }
             case "/api/catalog/equipment" -> { app.catalog.setEquipment(user,integer(b,"hallId"),integer(b,"facilityId"),integer(b,"quantity"),integer(b,"workingQuantity"));yield Map.of("saved",true); }
             default -> throw new HttpError(404,"This action was not found.");
         };
     }
-    private Map<String,Object> snapshot(BrowserSessions.Session s) {
+    private Map<String,Object> snapshot(BrowserSessions.Session s) throws SQLException {
         Map<String,Object> data=new LinkedHashMap<>();data.put("connected",state.ready());data.put("lecturerRegistrationEnabled",state.lecturerRegistrationEnabled());data.put("localSetupAllowed",publicOrigin==null);data.put("hasConfig",state.hasFile());data.put("problem",state.problem());data.put("csrf",s.csrf());
-        var user=s.user();data.put("user",user==null?null:Map.of("id",user.getAccountId(),"username",user.getUsername(),"role",user.getRole(),"admin",user.isAdministrator(),"canRequest",user.isAdministrator()||"Lecturer".equals(user.getRole())));
+        var user=s.user();if(user!=null&&!state.app().authentication.stillValid(user))user=null;data.put("user",user==null?null:Map.of("id",user.getAccountId(),"username",user.getUsername(),"role",user.getRole(),"admin",user.isAdministrator(),"canRequest",user.isAdministrator()||"Lecturer".equals(user.getRole())));
         return data;
     }
-    private static AuthenticatedUser require(BrowserSessions.Session s) { if(s.user()==null)throw new HttpError(401,"Sign in to continue.");return s.user(); }
+    private AuthenticatedUser require(BrowserSessions.Session s) throws SQLException { if(s.user()==null||!state.app().authentication.stillValid(s.user()))throw new HttpError(401,"Sign in again. Your account access may have changed.");return s.user(); }
+    private static LocalDate queryDate(Map<String,String> q,String key){String v=optionalQuery(q,key);return v==null?null:LocalDate.parse(v);}
+    private void calendar(HttpExchange x,BrowserSessions.Session s) throws Exception {
+        var user=require(s);var q=query(x);var from=queryDate(q,"from");var to=queryDate(q,"to");
+        if(from==null||to==null||to.isBefore(from)||java.time.temporal.ChronoUnit.DAYS.between(from,to)>366)throw new IllegalArgumentException("Choose a calendar range of at most 367 days.");
+        java.util.List<ScheduleEntry> events;
+        if("mine".equals(q.get("scope"))) events=state.app().bookings.mine(user).stream().filter(b->(b.status()==BookingStatus.Approved||b.status()==BookingStatus.Completed)&&!b.date().isBefore(from)&&!b.date().isAfter(to)).map(b->new ScheduleEntry(b.id(),b.hallLabel(),b.courseCode(),b.date(),b.start(),b.end(),b.type().name(),b.status().name())).toList();
+        else events=state.app().bookings.schedule(user,from,to);
+        String course=optionalQuery(q,"course");if(course!=null)events=events.stream().filter(e->course.equals(e.courseCode())).toList();
+        byte[] bytes=CalendarExporter.export(events).getBytes(StandardCharsets.UTF_8);securityHeaders(x);x.getResponseHeaders().set("Content-Type","text/calendar; charset=utf-8");x.getResponseHeaders().set("Content-Disposition","attachment; filename=HallSync_Schedule.ics");x.sendResponseHeaders(200,bytes.length);x.getResponseBody().write(bytes);
+    }
     private static AccountDraft account(JsonObject b) { return new AccountDraft(optionalInt(b,"departmentId"),text(b,"fullName"),text(b,"email"),text(b,"username")); }
     private static BookingDraft draft(JsonObject b) {
         List<Integer> groups=new ArrayList<>();JsonElement g=b.get("groupIds");
@@ -190,7 +210,7 @@ public final class ApiHandler implements HttpHandler {
         if(raw!=null)for(String part:raw.split("&")) { String[] pair=part.split("=",2);result.put(URLDecoder.decode(pair[0],StandardCharsets.UTF_8),pair.length==2?URLDecoder.decode(pair[1],StandardCharsets.UTF_8):""); }return result;
     }
     private void download(HttpExchange x,BrowserSessions.Session s) throws Exception {
-        ReportKind kind=ReportKind.valueOf(query(x).get("kind"));ReportTable report=state.app().reports.load(require(s),kind);
+        var q=query(x);ReportKind kind=ReportKind.valueOf(q.get("kind"));ReportTable report=state.app().reports.load(require(s),kind,queryDate(q,"from"),queryDate(q,"to"));
         var file=Files.createTempFile("hallsync-report-",".csv");
         try { CsvExporter.write(file,report);byte[] bytes=Files.readAllBytes(file);x.getResponseHeaders().set("Content-Type","text/csv; charset=utf-8");x.getResponseHeaders().set("Content-Disposition","attachment; filename=HallSync_"+kind.name()+".csv");securityHeaders(x);x.sendResponseHeaders(200,bytes.length);x.getResponseBody().write(bytes); }
         finally { Files.deleteIfExists(file); }

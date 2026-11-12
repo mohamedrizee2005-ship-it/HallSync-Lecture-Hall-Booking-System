@@ -5,16 +5,16 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public final class JdbcLecturerApplicationRepository implements LecturerApplicationRepository {
+public final class JdbcAccountApplicationRepository implements AccountApplicationRepository {
     private final JdbcExecutor db;
-    public JdbcLecturerApplicationRepository(JdbcExecutor db) { this.db=db; }
+    public JdbcAccountApplicationRepository(JdbcExecutor db) { this.db=db; }
     @Override public int register(AccountDraft d,String staffId,String hash) throws SQLException {
         return db.callForId("{CALL sp_register_lecturer_application(?,?,?,?,?,?,?)}",d.departmentId(),d.fullName(),d.email(),d.username(),hash,staffId);
     }
-    @Override public List<LecturerApplication> list(int actor,String status) throws SQLException {
-        return db.callRows("{CALL sp_list_lecturer_applications(?,?)}",r->new LecturerApplication(
+    @Override public List<AccountApplication> list(int actor,String status) throws SQLException {
+        return db.callRows("{CALL sp_list_lecturer_applications(?,?)}",r->new AccountApplication(
             r.getInt("ApplicationID"),r.getInt("AccountID"),r.getObject("DepartmentID",Integer.class),r.getString("DepartmentName"),
-            r.getString("FullName"),r.getString("Email"),r.getString("Username"),r.getString("StaffID"),r.getString("ApplicationStatus"),r.getBoolean("IsActive"),
+            r.getString("FullName"),r.getString("Email"),r.getString("Username"),r.getString("StaffID"),r.getString("RequestedRole"),r.getString("ApplicationStatus"),r.getBoolean("IsActive"),
             r.getObject("SubmittedAt",LocalDateTime.class),r.getObject("ReviewedByID",Integer.class),r.getString("ReviewerName"),r.getObject("ReviewedAt",LocalDateTime.class),r.getString("ReviewNote")),actor,status);
     }
     @Override public void review(int actor,int application,String decision,String note,boolean identityVerified) throws SQLException {

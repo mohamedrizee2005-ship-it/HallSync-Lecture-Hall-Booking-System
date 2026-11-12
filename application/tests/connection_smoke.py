@@ -28,17 +28,14 @@ def main():
     bootstrap_user = "hs_bootstrap_" + suffix
     bootstrap_created = False
     try:
-        full_sql=(ROOT/'database/HallSync_Full_Setup.sql').read_text()
-        upgrade_sql=(ROOT/'database/Upgrade_Lecturer_Approvals.sql').read_text()
-        legacy_sql=full_sql
-        for section in ['TABLE','PROCEDURES','GRANTS']:
-            start='-- BEGIN LECTURER APPLICATION '+section
-            end='-- END LECTURER APPLICATION '+section
-            block=full_sql[full_sql.index(start):full_sql.index(end)+len(end)]
-            assert block==upgrade_sql[upgrade_sql.index(start):upgrade_sql.index(end)+len(end)], 'Fresh/upgrade definitions drifted'
-            legacy_sql=legacy_sql.replace(block,'')
-        db_checks.install(c,legacy_sql,schema,role)
-        assert db_checks.scalar(c,"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE'",(schema,))==11
+        full_sql=(ROOT/'database/HallSync_Setup.sql').read_text()
+        upgrade_sql=full_sql
+        db_checks.install(c,full_sql,schema,role)
+        # Simulate the exact 2.2 account application table shape before this upgrade.
+        db_checks.query(c,f'RENAME TABLE {schema}.ACCOUNT_APPLICATION TO {schema}.LECTURER_APPLICATION')
+        db_checks.query(c,f'ALTER TABLE {schema}.LECTURER_APPLICATION DROP COLUMN RequestedRole')
+        db_checks.query(c,f'DROP TABLE {schema}.ROOM_ISSUE')
+        assert db_checks.scalar(c,"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE'",(schema,))==12
         # Preserve an existing reservation as well as every original account/password.
         a=db_checks.scalar(c,f"SELECT AccountID FROM {schema}.USER_ACCOUNT WHERE Username='demo_lecturer'")
         h=db_checks.scalar(c,f"SELECT MIN(HallID) FROM {schema}.LECTURE_HALL")
@@ -47,23 +44,24 @@ def main():
             return [db_checks.query(c,f'SELECT * FROM {schema}.{table} ORDER BY 1') for table in ['USER_ACCOUNT','BOOKING','DEPARTMENT','BUILDING']]
         before=snapshot();db_checks.install(c,upgrade_sql,schema,role);db_checks.install(c,upgrade_sql,schema,role)
         assert snapshot()==before,'Lecturer upgrade changed existing data'
-        print('11-table installation upgrades safely; users, password hashes, department IDs and reservations are retained.')
+        print('12-table installation upgrades safely; users, password hashes, department IDs and reservations are retained.')
         campus=json.loads((ROOT/'application/src/main/resources/campus.json').read_text())
         for faculty in campus['faculties']:
             for name in faculty['departments']:
                 assert db_checks.scalar(c,f"SELECT COUNT(*) FROM {schema}.DEPARTMENT WHERE DepartmentName=%s",(name,))==1
         print('Kelaniya reference seed includes every sourced department without duplicate names.')
-        login_sql = (ROOT / "database/Create_Application_Login.sql").read_text()
-        # The CI service receives TCP connections through Docker's bridge.
-        # The unique temporary CI login uses %, while the laptop script stays loopback-only.
-        login_sql = login_sql.replace("hallsync_db", schema).replace("hallsync_application", role)
-        login_sql = login_sql.replace("hallsync_app", user).replace("'127.0.0.1'", "'%'")
-        password = None
+        login_sql=full_sql[full_sql.index('-- SECTION 9:'):].replace('hallsync_db',schema).replace('hallsync_application',role).replace("'hallsync_app'","'"+user+"'").replace("'127.0.0.1'","'%'")
+        db_checks.query(c,'SET @hallsync_manage_login=1')
+        password=None
         for sql in db_checks.statements(login_sql):
-            rows = db_checks.query(c, sql)
-            if sql.startswith("CREATE USER"):
-                user_created = True
-                password = rows[0][2]
+            rows=db_checks.query(c,sql)
+            if sql.startswith('CALL _hs_connection_setup'):
+                user_created=True
+                assert rows and len(rows[0])==3,'Installer must return a generated login password'
+                password=rows[0][2]
+        # Repeating the installer login section must preserve that password.
+        for sql in db_checks.statements(login_sql):db_checks.query(c,sql)
+        db_checks.query(c,'SET @hallsync_manage_login=0')
         assert password, "MySQL must return a generated private password"
         with zipfile.ZipFile(ROOT/"application/target/hallsync.jar") as archive:
             manifest=archive.read("META-INF/MANIFEST.MF").decode()
@@ -95,7 +93,7 @@ def main():
             assert missing.returncode != 0 and "Configuration error" in missing.stderr
 
             counts_before = db_checks.query(c, f"SELECT (SELECT COUNT(*) FROM {schema}.USER_ACCOUNT),(SELECT COUNT(*) FROM {schema}.DEPARTMENT)")
-            upgrade = (ROOT/'database/Upgrade_Desktop_Reads.sql').read_text()
+            upgrade = full_sql
             db_checks.install(c,upgrade,schema,role)
             db_checks.install(c,upgrade,schema,role)
             assert counts_before == db_checks.query(c, f"SELECT (SELECT COUNT(*) FROM {schema}.USER_ACCOUNT),(SELECT COUNT(*) FROM {schema}.DEPARTMENT)")
@@ -143,7 +141,7 @@ def main():
             print(workflows.stdout,end='')
             # Simulate an existing installation without the new reference names.
             db_checks.query(c,f"DELETE FROM {schema}.DEPARTMENT WHERE DepartmentName='Chemistry'")
-            db_checks.query(c,f"DELETE FROM {schema}.BUILDING WHERE BuildingCode='K14'")
+            db_checks.query(c,f"DELETE FROM {schema}.BUILDING WHERE BuildingCode='B1'")
             web = subprocess.run(['java','-cp',classpath,'lk.ac.kln.hallsync.WebIntegrationCheck',str(config)],
                                  cwd=ROOT,env=feature_env,capture_output=True,text=True,timeout=180)
             assert web.returncode == 0, web.stdout + web.stderr
@@ -151,9 +149,9 @@ def main():
             assert bootstrap_password not in web.stdout + web.stderr
             print(web.stdout,end='')
             browser = browser_checks(config,feature_env)
-            before=snapshot();applications_before=db_checks.query(c,f'SELECT * FROM {schema}.LECTURER_APPLICATION ORDER BY ApplicationID')
+            before=snapshot();applications_before=db_checks.query(c,f'SELECT * FROM {schema}.ACCOUNT_APPLICATION ORDER BY ApplicationID')
             db_checks.install(c,upgrade_sql,schema,role)
-            assert snapshot()==before and applications_before==db_checks.query(c,f'SELECT * FROM {schema}.LECTURER_APPLICATION ORDER BY ApplicationID')
+            assert snapshot()==before and applications_before==db_checks.query(c,f'SELECT * FROM {schema}.ACCOUNT_APPLICATION ORDER BY ApplicationID')
             print('Repeating the lecturer upgrade also preserves application review history.')
             workflow_checks = [line.removeprefix('PASS - ') for line in workflows.stdout.splitlines() if line.startswith('PASS - ')]
             web_checks = [line.removeprefix('PASS - ') for line in web.stdout.splitlines() if line.startswith('PASS - ')]

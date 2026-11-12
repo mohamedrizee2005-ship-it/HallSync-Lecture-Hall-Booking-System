@@ -4,9 +4,9 @@ import lk.ac.kln.hallsync.model.*;
 import java.sql.SQLException;
 import java.util.List;
 
-public interface LecturerApplicationRepository {
+public interface AccountApplicationRepository {
     int register(AccountDraft details,String staffId,String passwordHash) throws SQLException;
-    List<LecturerApplication> list(int actor,String status) throws SQLException;
+    List<AccountApplication> list(int actor,String status) throws SQLException;
     void review(int actor,int application,String decision,String note,boolean identityVerified) throws SQLException;
     boolean installed() throws SQLException;
 }

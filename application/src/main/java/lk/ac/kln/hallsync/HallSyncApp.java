@@ -22,6 +22,6 @@ public final class HallSyncApp {
             if(!Boolean.getBoolean("hallsync.noBrowser")&&Desktop.isDesktopSupported()&&Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                 try { Desktop.getDesktop().browse(server.browserAddress()); } catch(Exception unavailable) { System.out.println("Open the address above in your browser."); }
             }
-        } catch(Exception error) { System.err.println("HallSync could not start. Check Java, MySQL and the local configuration.");System.exit(1); }
+        } catch(Exception error) { System.err.println("HallSync could not start ("+error.getClass().getSimpleName()+"). Check Java, the launch port and the local configuration.");System.exit(1); }
     }
 }

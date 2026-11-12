@@ -126,7 +126,7 @@
     },
     {
       "code": "A7",
-      "name": "A7 · Faculty of Science",
+      "name": "A7 · Teaching Building",
       "faculty": "science",
       "location": "Faculty of Science, Dalugama",
       "source": "https://dscs.kln.ac.lk/news/allnews/statbee2"
@@ -140,7 +140,7 @@
     },
     {
       "code": "A11",
-      "name": "A11 · Faculty of Science",
+      "name": "A11 · Teaching Building",
       "faculty": "science",
       "location": "Faculty of Science, Dalugama",
       "source": "https://dscs.kln.ac.lk/news/allnews/statbee2"
@@ -158,6 +158,41 @@
       "faculty": "humanities",
       "location": "Faculty of Humanities, Dalugama",
       "source": "https://hu.kln.ac.lk/index.php"
+    },
+    {
+      "code": "F4",
+      "name": "F4 · Teaching Building",
+      "faculty": "humanities",
+      "location": "University of Kelaniya, Dalugama",
+      "source": "https://cbs.kln.ac.lk/classrooms"
+    },
+    {
+      "code": "K1",
+      "name": "K1 · Teaching Building",
+      "faculty": "social",
+      "location": "University of Kelaniya, Dalugama",
+      "source": "https://cbs.kln.ac.lk/classrooms"
+    },
+    {
+      "code": "K2",
+      "name": "K2 · Teaching Building",
+      "faculty": "social",
+      "location": "University of Kelaniya, Dalugama",
+      "source": "https://cbs.kln.ac.lk/classrooms"
+    },
+    {
+      "code": "K27",
+      "name": "K27 · Teaching Building",
+      "faculty": "social",
+      "location": "University of Kelaniya, Dalugama",
+      "source": "https://cbs.kln.ac.lk/classrooms"
+    },
+    {
+      "code": "K28",
+      "name": "K28 · Teaching Building",
+      "faculty": "humanities",
+      "location": "University of Kelaniya, Dalugama",
+      "source": "https://cbs.kln.ac.lk/classrooms"
     }
   ],
   "venues": [
@@ -168,7 +203,8 @@
       "label": "Multimedia Room",
       "capacity": null,
       "floor": null,
-      "source": "https://conf.kln.ac.lk/scse2019/"
+      "source": "https://conf.kln.ac.lk/scse2019/",
+      "equipment": []
     },
     {
       "key": "A7-406",
@@ -177,7 +213,8 @@
       "label": "Teaching hall",
       "capacity": null,
       "floor": null,
-      "source": "https://dscs.kln.ac.lk/news/allnews/statbee2"
+      "source": "https://dscs.kln.ac.lk/news/allnews/statbee2",
+      "equipment": []
     },
     {
       "key": "A7-308",
@@ -186,7 +223,8 @@
       "label": "Teaching room",
       "capacity": null,
       "floor": null,
-      "source": "https://fgs.kln.ac.lk/index.php/newsnotices?start=0"
+      "source": "https://fgs.kln.ac.lk/index.php/newsnotices?start=0",
+      "equipment": []
     },
     {
       "key": "A7-2F1",
@@ -195,7 +233,8 @@
       "label": "Teaching room",
       "capacity": null,
       "floor": null,
-      "source": "https://fgs.kln.ac.lk/index.php/newsnotices?start=0"
+      "source": "https://fgs.kln.ac.lk/index.php/newsnotices?start=0",
+      "equipment": []
     },
     {
       "key": "A8-Auditorium",
@@ -203,8 +242,10 @@
       "number": "Auditorium",
       "label": "Auditorium",
       "capacity": null,
-      "floor": null,
-      "source": "https://conf.kln.ac.lk/icaps/index.php/component/sppagebuilder/?Itemid=0&id=98&view=page"
+      "floor": "6",
+      "source": "https://conf.kln.ac.lk/icaps/index.php/component/sppagebuilder/?Itemid=0&id=98&view=page",
+      "floorSource": "https://sdgpt.kln.ac.lk/archives/2023",
+      "equipment": []
     },
     {
       "key": "A11-201",
@@ -213,7 +254,8 @@
       "label": "Teaching room",
       "capacity": null,
       "floor": null,
-      "source": "https://dscs.kln.ac.lk/news/allnews/statbee2"
+      "source": "https://dscs.kln.ac.lk/news/allnews/statbee2",
+      "equipment": []
     },
     {
       "key": "A11-207",
@@ -222,7 +264,8 @@
       "label": "Teaching room",
       "capacity": null,
       "floor": null,
-      "source": "https://fgs.kln.ac.lk/index.php/newsnotices?start=0"
+      "source": "https://fgs.kln.ac.lk/index.php/newsnotices?start=0",
+      "equipment": []
     },
     {
       "key": "B1-212",
@@ -231,7 +274,8 @@
       "label": "Lecture Theatre",
       "capacity": null,
       "floor": null,
-      "source": "https://conf.kln.ac.lk/icaps/index.php/for-authors/conference-programme-2026"
+      "source": "https://conf.kln.ac.lk/icaps/index.php/for-authors/conference-programme-2026",
+      "equipment": []
     },
     {
       "key": "K14-Auditorium",
@@ -240,7 +284,148 @@
       "label": "Auditorium",
       "capacity": null,
       "floor": null,
-      "source": "https://hu.kln.ac.lk/index.php"
+      "source": "https://hu.kln.ac.lk/index.php",
+      "equipment": []
+    },
+    {
+      "key": "F4-201",
+      "buildingCode": "F4",
+      "number": "201",
+      "label": "Teaching room",
+      "capacity": 350,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "F4-102",
+      "buildingCode": "F4",
+      "number": "102",
+      "label": "Teaching room",
+      "capacity": 100,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "F4-101",
+      "buildingCode": "F4",
+      "number": "101",
+      "label": "Teaching room",
+      "capacity": 80,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K2-002",
+      "buildingCode": "K2",
+      "number": "002",
+      "label": "Teaching room",
+      "capacity": 350,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K1-201",
+      "buildingCode": "K1",
+      "number": "201",
+      "label": "Teaching room",
+      "capacity": 100,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K27-001",
+      "buildingCode": "K27",
+      "number": "001",
+      "label": "Teaching room",
+      "capacity": 100,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K28-201",
+      "buildingCode": "K28",
+      "number": "201",
+      "label": "Teaching room",
+      "capacity": 80,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K14-204",
+      "buildingCode": "K14",
+      "number": "204",
+      "label": "Teaching room",
+      "capacity": 60,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K14-402",
+      "buildingCode": "K14",
+      "number": "402",
+      "label": "Teaching room",
+      "capacity": 60,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K14-205",
+      "buildingCode": "K14",
+      "number": "205",
+      "label": "Teaching room",
+      "capacity": 50,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K14-307",
+      "buildingCode": "K14",
+      "number": "307",
+      "label": "Teaching room",
+      "capacity": 50,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K14-403",
+      "buildingCode": "K14",
+      "number": "403",
+      "label": "Teaching room",
+      "capacity": 50,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K14-306",
+      "buildingCode": "K14",
+      "number": "306",
+      "label": "Teaching room",
+      "capacity": 40,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
+    },
+    {
+      "key": "K14-201",
+      "buildingCode": "K14",
+      "number": "201",
+      "label": "Teaching room",
+      "capacity": 25,
+      "floor": null,
+      "source": "https://cbs.kln.ac.lk/classrooms",
+      "equipment": []
     }
   ],
   "photos": [
@@ -276,9 +461,25 @@
     }
   ],
   "notes": [
-    "Names were cross-checked against university faculty pages. This source-linked catalogue is not an exhaustive live building inventory.",
-    "Hall capacities, floors, equipment and current timetable reservations require faculty confirmation. No unverified venue is imported as a bookable hall.",
-    "Social Sciences includes Information Technology from its department menu; older faculty overviews may list a different count.",
-    "Graduate Studies is listed as a faculty; no separate department list is imported for it."
+    "Published room capacities are imported as Active for this local prototype. This is not a live university reservation feed. Load existing timetable reservations before relying on availability.",
+    "Room numbers do not establish floor levels. Unknown floors and per-room equipment quantities remain unconfirmed.",
+    "Faculty names in the directory describe departments and locations; institutional branding is university-wide."
+  ],
+  "equipmentTypes": [
+    {
+      "name": "Projector",
+      "description": "Projection equipment; assign per-hall quantities after local inspection.",
+      "source": "https://fct.kln.ac.lk/facility/lecture-rooms"
+    },
+    {
+      "name": "Audio system",
+      "description": "Audio equipment; working quantities require a local inventory.",
+      "source": "https://fct.kln.ac.lk/facility/lecture-rooms"
+    },
+    {
+      "name": "Internet access",
+      "description": "Connectivity listed by the university; verify in each hall.",
+      "source": "https://fct.kln.ac.lk/facility/lecture-rooms"
+    }
   ]
 }

@@ -39,6 +39,9 @@ public final class FullApplicationIntegrationCheck {
             check("Admin provisioning creates a usable second administrator",adminB.getAccountId()==aid);
             AccountDraft newStudent=new AccountDraft(dept,"புதிய மாணவர்","java_student@example.invalid","java_student");
             int sid=app.accounts.registerStudent(newStudent,secret);
+            check("Pending student cannot sign in",app.authentication.signIn("java_student",secret).isEmpty());
+            int application=app.accountApplications.list(admin,"Pending").stream().filter(a->a.accountId()==sid).findFirst().orElseThrow().id();
+            app.accountApplications.review(admin,application,"Approved","Student identity confirmed independently.",true);
             AuthenticatedUser registered=app.authentication.signIn("java_student",secret).orElseThrow();
             check("Public registration always creates Student",sid==registered.getAccountId() && "Student".equals(registered.getRole()));
             fails("Student cannot provision a privileged account",SecurityException.class,() -> app.accounts.provision(student,secondAdmin,secret,"Lecturer"));

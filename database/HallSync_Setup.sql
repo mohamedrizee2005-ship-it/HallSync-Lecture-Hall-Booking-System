@@ -1,17 +1,11 @@
--- HallSync_Full_Setup.sql
--- Complete setup for MySQL 8.0.46: database, 12 tables, workflows, views,
--- demo records, application role and final verification.
--- Run this whole file ONCE with Stop Script Execution On Errors enabled.
--- Use a local MySQL administrator connection.
---
--- Supported starting points:
---   1. No hallsync_db yet.
---   2. An empty hallsync_db.
---   3. hallsync_db containing only the matching DEPARTMENT table and its data.
--- Existing department rows are preserved. No database or table is dropped.
--- If other tables already exist, the preflight stops for inspection.
--- Demo account hashes have random discarded passwords, not usable login passwords.
---
+-- HallSync_Setup.sql | HallSync 3.0 | MySQL 8.0.46
+-- Run this entire file in Workbench as your local MySQL administrator.
+-- Creates or upgrades HallSync without deleting existing users, passwords or bookings.
+-- Existing connection passwords are preserved; a new login gets a generated password.
+-- Enable Stop Script Execution On Errors. Back up an existing installation before upgrading.
+-- University capacities are published reference data, not a live timetable or safety certification.
+SET @hallsync_test_mode=COALESCE(@hallsync_test_mode,0);
+SET @hallsync_manage_login=COALESCE(@hallsync_manage_login,1);
 -- SECTION 1: CREATE / SELECT THE DATABASE
 CREATE DATABASE IF NOT EXISTS hallsync_db
     CHARACTER SET utf8mb4
@@ -43,9 +37,13 @@ BEGIN
  IF NOT EXISTS(SELECT 1 FROM information_schema.schemata WHERE schema_name=DATABASE() AND default_character_set_name='utf8mb4' AND default_collation_name='utf8mb4_0900_ai_ci') THEN
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Existing database must use utf8mb4 / utf8mb4_0900_ai_ci.';
  END IF;
- IF (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE')<>1
- OR NOT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='department' AND engine='InnoDB') THEN
-  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Expected only DEPARTMENT. Stop and inspect; do not reset.';
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'
+ AND LOWER(table_name) NOT IN ('department','building','facility','user_account','course_unit','student_group','lecture_hall','booking','booking_group','hall_facility','hall_block','lecturer_application','account_application','room_issue')) THEN
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected tables in hallsync_db. Stop and inspect this database.';
+ END IF;
+ IF (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE')>1
+ AND (SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name) IN ('department','building','facility','user_account','course_unit','student_group','lecture_hall','booking','booking_group','hall_facility','hall_block'))<>11 THEN
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Incomplete existing HallSync schema. Stop and inspect; do not reset.';
  END IF;
  IF (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='department')<>2
  OR NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='department' AND column_name='DepartmentID' AND column_type='int' AND is_nullable='NO' AND column_key='PRI' AND extra LIKE '%auto_increment%')
@@ -55,12 +53,32 @@ BEGIN
  IF NOT EXISTS(SELECT 1 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND LOWER(table_name)='department' AND constraint_name='ck_department_departmentname' AND constraint_type='CHECK' AND enforced='YES') THEN
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Existing DEPARTMENT lacks the required enforced name CHECK.';
  END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='building') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='building')<>4 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected BUILDING structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='facility') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='facility')<>3 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected FACILITY structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='user_account') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='user_account')<>8 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected USER_ACCOUNT structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='course_unit') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='course_unit')<>4 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected COURSE_UNIT structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='student_group') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='student_group')<>5 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected STUDENT_GROUP structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='lecture_hall') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='lecture_hall')<>6 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected LECTURE_HALL structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='booking') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='booking')<>16 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected BOOKING structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='hall_block') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='hall_block')<>7 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected HALL_BLOCK structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='hall_facility') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='hall_facility')<>4 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected HALL_FACILITY structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='booking_group') AND (SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='booking_group')<>2 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Unexpected BOOKING_GROUP structure. Stop and inspect.'; END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='lecturer_application') THEN
+  IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='account_application') THEN
+   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Two account application tables exist. Stop and inspect.';
+  END IF;
+  RENAME TABLE LECTURER_APPLICATION TO ACCOUNT_APPLICATION;
+ END IF;
+ IF EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='account_application')
+ AND NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND LOWER(table_name)='account_application' AND column_name='RequestedRole') THEN
+  ALTER TABLE ACCOUNT_APPLICATION ADD COLUMN RequestedRole ENUM('Lecturer','Student') NOT NULL DEFAULT 'Lecturer';
+ END IF;
 END$$
 CALL _hs_schema_preflight()$$
 DROP PROCEDURE _hs_schema_preflight$$
 DELIMITER ;
 -- 2. BUILDING
-CREATE TABLE BUILDING (
+CREATE TABLE IF NOT EXISTS BUILDING (
     BuildingID INT NOT NULL AUTO_INCREMENT,
     BuildingCode VARCHAR(20) NOT NULL,
     BuildingName VARCHAR(100) NOT NULL,
@@ -77,7 +95,7 @@ CREATE TABLE BUILDING (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 3. FACILITY
-CREATE TABLE FACILITY (
+CREATE TABLE IF NOT EXISTS FACILITY (
     FacilityID INT NOT NULL AUTO_INCREMENT,
     FacilityName VARCHAR(100) NOT NULL,
     Description VARCHAR(255) NULL,
@@ -90,7 +108,7 @@ CREATE TABLE FACILITY (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 4. USER_ACCOUNT
-CREATE TABLE USER_ACCOUNT (
+CREATE TABLE IF NOT EXISTS USER_ACCOUNT (
     AccountID INT NOT NULL AUTO_INCREMENT,
     DepartmentID INT NULL,
     FullName VARCHAR(150) NOT NULL,
@@ -124,7 +142,7 @@ CREATE TABLE USER_ACCOUNT (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 5. COURSE_UNIT
-CREATE TABLE COURSE_UNIT (
+CREATE TABLE IF NOT EXISTS COURSE_UNIT (
     CourseID INT NOT NULL AUTO_INCREMENT,
     DepartmentID INT NOT NULL,
     CourseCode VARCHAR(20) NOT NULL,
@@ -143,7 +161,7 @@ CREATE TABLE COURSE_UNIT (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 6. STUDENT_GROUP
-CREATE TABLE STUDENT_GROUP (
+CREATE TABLE IF NOT EXISTS STUDENT_GROUP (
     GroupID INT NOT NULL AUTO_INCREMENT,
     DepartmentID INT NOT NULL,
     GroupName VARCHAR(100) NOT NULL,
@@ -166,7 +184,7 @@ CREATE TABLE STUDENT_GROUP (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 7. LECTURE_HALL
-CREATE TABLE LECTURE_HALL (
+CREATE TABLE IF NOT EXISTS LECTURE_HALL (
     HallID INT NOT NULL AUTO_INCREMENT,
     BuildingID INT NOT NULL,
     HallNo VARCHAR(20) NOT NULL,
@@ -187,7 +205,7 @@ CREATE TABLE LECTURE_HALL (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 8. BOOKING
-CREATE TABLE BOOKING (
+CREATE TABLE IF NOT EXISTS BOOKING (
     BookingID INT NOT NULL AUTO_INCREMENT,
     RequesterID INT NOT NULL,
     HallID INT NOT NULL,
@@ -257,7 +275,7 @@ CREATE TABLE BOOKING (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 9. HALL_BLOCK
-CREATE TABLE HALL_BLOCK (
+CREATE TABLE IF NOT EXISTS HALL_BLOCK (
     BlockID INT NOT NULL AUTO_INCREMENT,
     HallID INT NOT NULL,
     RecordedByID INT NOT NULL,
@@ -281,7 +299,7 @@ CREATE TABLE HALL_BLOCK (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 10. HALL_FACILITY
-CREATE TABLE HALL_FACILITY (
+CREATE TABLE IF NOT EXISTS HALL_FACILITY (
     HallID INT NOT NULL,
     FacilityID INT NOT NULL,
     Quantity INT NOT NULL,
@@ -300,7 +318,7 @@ CREATE TABLE HALL_FACILITY (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 11. BOOKING_GROUP
-CREATE TABLE BOOKING_GROUP (
+CREATE TABLE IF NOT EXISTS BOOKING_GROUP (
     BookingID INT NOT NULL,
     GroupID INT NOT NULL,
     PRIMARY KEY (BookingID, GroupID),
@@ -314,10 +332,11 @@ CREATE TABLE BOOKING_GROUP (
 
 
 -- BEGIN LECTURER APPLICATION TABLE
-CREATE TABLE IF NOT EXISTS LECTURER_APPLICATION (
+CREATE TABLE IF NOT EXISTS ACCOUNT_APPLICATION (
     ApplicationID INT NOT NULL AUTO_INCREMENT,
     AccountID INT NOT NULL,
     StaffID VARCHAR(50) NOT NULL,
+    RequestedRole ENUM('Lecturer','Student') NOT NULL DEFAULT 'Lecturer',
     ApplicationStatus ENUM('Pending','Approved','Rejected') NOT NULL DEFAULT 'Pending',
     SubmittedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     ReviewedByID INT NULL,
@@ -339,9 +358,33 @@ CREATE TABLE IF NOT EXISTS LECTURER_APPLICATION (
     INDEX ix_lecturer_application_queue (ApplicationStatus,SubmittedAt,ApplicationID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 -- END LECTURER APPLICATION TABLE
-SELECT COUNT(*) AS TableCount FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE';
--- Expected: 12.
 
+
+
+
+-- Room reports preserve user feedback separately from bookings.
+CREATE TABLE IF NOT EXISTS ROOM_ISSUE (
+ IssueID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ HallID INT NOT NULL,
+ ReportedByID INT NOT NULL,
+ Category ENUM('Equipment','Capacity','Other') NOT NULL,
+ Details VARCHAR(1000) NOT NULL,
+ IssueStatus ENUM('Open','Resolved') NOT NULL DEFAULT 'Open',
+ CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ ReviewedByID INT NULL,
+ ReviewedAt DATETIME NULL,
+ ReviewNote VARCHAR(500) NULL,
+ CONSTRAINT fk_issue_hall FOREIGN KEY(HallID) REFERENCES LECTURE_HALL(HallID),
+ CONSTRAINT fk_issue_reporter FOREIGN KEY(ReportedByID) REFERENCES USER_ACCOUNT(AccountID),
+ CONSTRAINT fk_issue_reviewer FOREIGN KEY(ReviewedByID) REFERENCES USER_ACCOUNT(AccountID),
+ CONSTRAINT ck_issue_details CHECK(CHAR_LENGTH(TRIM(Details))>0),
+ CONSTRAINT ck_issue_review CHECK((IssueStatus='Open' AND ReviewedByID IS NULL AND ReviewedAt IS NULL AND ReviewNote IS NULL) OR (IssueStatus='Resolved' AND ReviewedByID IS NOT NULL AND ReviewedAt IS NOT NULL AND ReviewNote IS NOT NULL AND CHAR_LENGTH(TRIM(ReviewNote))>0)),
+ CONSTRAINT ck_issue_time CHECK(ReviewedAt IS NULL OR ReviewedAt>=CreatedAt),
+ INDEX ix_issue_queue(IssueStatus,CreatedAt,IssueID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+SELECT COUNT(*) AS TableCount FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE';
+-- Expected: 13.
 
 -- SECTION 4: BUSINESS PROCEDURES. Reinstalling procedures preserves table data.
 -- Write procedures own their transaction; call outside an existing transaction.
@@ -546,7 +589,8 @@ SET v_started=TRUE;
 BEGIN
 
 DECLARE v_hall INT DEFAULT NULL; DECLARE v_current INT DEFAULT NULL; DECLARE v_owner INT;
-DECLARE v_state VARCHAR(10); DECLARE v_role VARCHAR(20); DECLARE v_date DATE; DECLARE v_start TIME;
+DECLARE v_state VARCHAR(10); DECLARE v_role VARCHAR(20);
+ DECLARE v_requested_role VARCHAR(20); DECLARE v_date DATE; DECLARE v_start TIME;
 DECLARE v_cap INT; DECLARE v_hs VARCHAR(10);
 SELECT HallID INTO v_hall FROM BOOKING WHERE BookingID=p_booking;
 IF v_hall IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Booking not found.'; END IF;
@@ -700,9 +744,10 @@ SET v_started=TRUE;
 BEGIN
 
 CALL _hs_validate_account(p_name,p_email,p_username,p_password_hash);
-INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role)
-VALUES(p_department,TRIM(p_name),TRIM(p_email),TRIM(p_username),p_password_hash,'Student');
+INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role,IsActive)
+VALUES(p_department,TRIM(p_name),TRIM(p_email),TRIM(p_username),p_password_hash,'Student',0);
 SET p_account_id=LAST_INSERT_ID();
+INSERT INTO ACCOUNT_APPLICATION(AccountID,StaffID,RequestedRole) VALUES(p_account_id,TRIM(p_username),'Student');
 
 END;
 COMMIT;
@@ -926,7 +971,7 @@ BEGIN
  INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role,IsActive)
  VALUES(p_department,TRIM(p_name),TRIM(p_email),TRIM(p_username),p_password_hash,'Lecturer',0);
  SET v_account=LAST_INSERT_ID();
- INSERT INTO LECTURER_APPLICATION(AccountID,StaffID) VALUES(v_account,TRIM(p_staff_id));
+ INSERT INTO ACCOUNT_APPLICATION(AccountID,StaffID) VALUES(v_account,TRIM(p_staff_id));
  SET p_application_id=LAST_INSERT_ID();
  COMMIT;
 END$$
@@ -944,10 +989,10 @@ BEGIN
  IF p_status IS NOT NULL AND p_status NOT IN ('Pending','Approved','Rejected') THEN
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Choose a valid application status.';
  END IF;
- SELECT a.ApplicationID,a.AccountID,a.StaffID,a.ApplicationStatus,a.SubmittedAt,
+ SELECT a.ApplicationID,a.AccountID,a.StaffID,a.RequestedRole,a.ApplicationStatus,a.SubmittedAt,
         a.ReviewedByID,a.ReviewedAt,a.ReviewNote,r.FullName AS ReviewerName,
         u.DepartmentID,d.DepartmentName,u.FullName,u.Email,u.Username,u.IsActive
- FROM LECTURER_APPLICATION a JOIN USER_ACCOUNT u ON u.AccountID=a.AccountID
+ FROM ACCOUNT_APPLICATION a JOIN USER_ACCOUNT u ON u.AccountID=a.AccountID
  LEFT JOIN DEPARTMENT d ON d.DepartmentID=u.DepartmentID
  LEFT JOIN USER_ACCOUNT r ON r.AccountID=a.ReviewedByID
  WHERE p_status IS NULL OR a.ApplicationStatus=p_status
@@ -964,6 +1009,7 @@ BEGIN
  DECLARE v_account INT DEFAULT NULL;
  DECLARE v_status VARCHAR(20);
  DECLARE v_role VARCHAR(20);
+ DECLARE v_requested_role VARCHAR(20);
  DECLARE v_active BOOLEAN;
  DECLARE v_started BOOLEAN DEFAULT FALSE;
  DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN IF v_started THEN ROLLBACK; END IF; RESIGNAL; END;
@@ -985,16 +1031,16 @@ BEGIN
   SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Enter a reason for rejecting this application.';
  END IF;
  -- The application row serializes competing reviews; a decision and activation commit together.
- SELECT AccountID,ApplicationStatus INTO v_account,v_status FROM LECTURER_APPLICATION
+ SELECT AccountID,ApplicationStatus,RequestedRole INTO v_account,v_status,v_requested_role FROM ACCOUNT_APPLICATION
  WHERE ApplicationID=p_application FOR UPDATE;
- IF v_account IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Lecturer application not found.'; END IF;
+ IF v_account IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Account application not found.'; END IF;
  IF v_account=p_actor THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='An administrator cannot review their own application.'; END IF;
  IF v_status<>'Pending' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='This application has already been reviewed.'; END IF;
  SELECT Role,IsActive INTO v_role,v_active FROM USER_ACCOUNT WHERE AccountID=v_account FOR UPDATE;
- IF v_role<>'Lecturer' OR v_active<>0 THEN
-  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='This account is no longer an inactive lecturer applicant. Stop and inspect the account.';
+ IF v_role<>v_requested_role OR v_active<>0 THEN
+  SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='This account is no longer an inactive account applicant. Stop and inspect the account.';
  END IF;
- UPDATE LECTURER_APPLICATION SET ApplicationStatus=p_decision,ReviewedByID=p_actor,ReviewedAt=CURRENT_TIMESTAMP,
+ UPDATE ACCOUNT_APPLICATION SET ApplicationStatus=p_decision,ReviewedByID=p_actor,ReviewedAt=CURRENT_TIMESTAMP,
  ReviewNote=CASE WHEN p_decision='Approved' THEN COALESCE(NULLIF(TRIM(p_note),''),'Identity confirmed through an independent university channel.') ELSE TRIM(p_note) END
  WHERE ApplicationID=p_application;
  UPDATE USER_ACCOUNT SET IsActive=(p_decision='Approved') WHERE AccountID=v_account;
@@ -1007,8 +1053,86 @@ SQL SECURITY DEFINER
 BEGIN
  SELECT ((SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=DATABASE()
    AND routine_name IN ('sp_register_lecturer_application','sp_list_lecturer_applications','sp_review_lecturer_application'))=3
-   AND EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='LECTURER_APPLICATION')) AS RegistrationEnabled;
+   AND EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND LOWER(table_name)='account_application')) AS RegistrationEnabled;
 END$$
+
+DROP PROCEDURE IF EXISTS sp_report_room_issue$$
+CREATE PROCEDURE sp_report_room_issue(IN p_actor INT,IN p_hall INT,IN p_category VARCHAR(20),IN p_details TEXT,OUT p_id INT)
+SQL SECURITY DEFINER
+BEGIN
+ CALL _hs_require_actor(p_actor,'VIEW');
+ IF p_category IS NULL OR p_category NOT IN ('Equipment','Capacity','Other') OR p_details IS NULL OR CHAR_LENGTH(TRIM(p_details)) NOT BETWEEN 1 AND 1000 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Choose a category and enter a report of 1 to 1000 characters.'; END IF;
+ INSERT INTO ROOM_ISSUE(HallID,ReportedByID,Category,Details) VALUES(p_hall,p_actor,p_category,TRIM(p_details));
+ SET p_id=LAST_INSERT_ID();
+END$$
+DROP PROCEDURE IF EXISTS sp_list_room_issues$$
+CREATE PROCEDURE sp_list_room_issues(IN p_actor INT)
+SQL SECURITY DEFINER
+BEGIN
+ CALL _hs_require_actor(p_actor,'VIEW');
+ SELECT i.*,CONCAT(b.BuildingCode,' / ',h.HallNo) AS HallLabel,u.FullName AS ReporterName,r.FullName AS ReviewerName
+ FROM ROOM_ISSUE i JOIN LECTURE_HALL h ON h.HallID=i.HallID JOIN BUILDING b ON b.BuildingID=h.BuildingID
+ JOIN USER_ACCOUNT u ON u.AccountID=i.ReportedByID LEFT JOIN USER_ACCOUNT r ON r.AccountID=i.ReviewedByID
+ WHERE i.ReportedByID=p_actor OR EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE AccountID=p_actor AND Role='AdminStaff' AND IsActive=1)
+ ORDER BY (i.IssueStatus='Open') DESC,i.CreatedAt DESC,i.IssueID DESC;
+END$$
+DROP PROCEDURE IF EXISTS sp_resolve_room_issue$$
+CREATE PROCEDURE sp_resolve_room_issue(IN p_actor INT,IN p_issue INT,IN p_note TEXT)
+SQL SECURITY DEFINER
+BEGIN
+ CALL _hs_require_actor(p_actor,'ADMIN');
+ IF p_note IS NULL OR CHAR_LENGTH(TRIM(p_note)) NOT BETWEEN 1 AND 500 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Enter a resolution note of 1 to 500 characters.'; END IF;
+ UPDATE ROOM_ISSUE SET IssueStatus='Resolved',ReviewedByID=p_actor,ReviewedAt=CURRENT_TIMESTAMP,ReviewNote=TRIM(p_note) WHERE IssueID=p_issue AND IssueStatus='Open';
+ IF ROW_COUNT()<>1 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Report not found or already resolved.'; END IF;
+END$$
+DROP PROCEDURE IF EXISTS sp_manage_account$$
+CREATE PROCEDURE sp_manage_account(IN p_actor INT,IN p_account INT,IN p_role VARCHAR(20),IN p_active BOOLEAN)
+SQL SECURITY DEFINER
+BEGIN
+ DECLARE v_guard INT; DECLARE v_pending INT;
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK;RESIGNAL;END;
+ START TRANSACTION;
+ -- A shared row serializes administrator changes and protects the last active administrator.
+ SELECT DepartmentID INTO v_guard FROM DEPARTMENT ORDER BY DepartmentID LIMIT 1 FOR UPDATE;
+ CALL _hs_require_actor(p_actor,'ADMIN');
+ IF p_account=p_actor THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Administrators cannot change their own access.'; END IF;
+ IF p_role IS NULL OR p_role NOT IN ('Student','Lecturer','AdminStaff') OR p_active IS NULL OR p_active NOT IN (0,1) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Choose a valid role and active state.';END IF;
+ IF NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE AccountID=p_account) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Account not found.';END IF;
+ IF EXISTS(SELECT 1 FROM ACCOUNT_APPLICATION WHERE AccountID=p_account AND ApplicationStatus<>'Approved') THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Review this pending or rejected registration through Account approvals.';END IF;
+ IF EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE AccountID=p_account AND Role='AdminStaff' AND IsActive=1) AND (p_role<>'AdminStaff' OR p_active=0) AND (SELECT COUNT(*) FROM USER_ACCOUNT WHERE Role='AdminStaff' AND IsActive=1)<=1 THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Keep at least one active administrator.';END IF;
+ UPDATE USER_ACCOUNT SET Role=p_role,IsActive=p_active WHERE AccountID=p_account;
+ COMMIT;
+END$$
+DROP PROCEDURE IF EXISTS sp_edit_hall$$
+CREATE PROCEDURE sp_edit_hall(IN p_actor INT,IN p_hall INT,IN p_building INT,IN p_number VARCHAR(20),IN p_floor VARCHAR(10),IN p_capacity INT,IN p_status VARCHAR(10))
+SQL SECURITY DEFINER
+BEGIN
+ DECLARE v_cap INT;DECLARE v_status VARCHAR(10);
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK;RESIGNAL;END;
+ START TRANSACTION;
+ CALL _hs_lock_hall(p_hall,v_cap,v_status);CALL _hs_require_actor(p_actor,'ADMIN');
+ IF p_capacity IS NULL OR p_capacity<=0 OR p_number IS NULL OR CHAR_LENGTH(TRIM(p_number))=0 OR p_status IS NULL OR p_status NOT IN ('Active','Inactive') THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Enter hall details, a positive capacity and a valid status.';END IF;
+ IF EXISTS(SELECT 1 FROM BOOKING WHERE HallID=p_hall AND BookingStatus='Approved' AND TIMESTAMP(BookingDate,EndTime)>CURRENT_TIMESTAMP AND (p_status='Inactive' OR ExpectedAttendance>p_capacity)) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='This change would invalidate an approved reservation.';END IF;
+ UPDATE LECTURE_HALL SET BuildingID=p_building,HallNo=TRIM(p_number),Floor=NULLIF(TRIM(p_floor),''),Capacity=p_capacity,OperationalStatus=p_status WHERE HallID=p_hall;
+ COMMIT;
+END$$
+DROP PROCEDURE IF EXISTS sp_remove_hall$$
+CREATE PROCEDURE sp_remove_hall(IN p_actor INT,IN p_hall INT)
+SQL SECURITY DEFINER
+BEGIN
+ DECLARE v_cap INT;DECLARE v_status VARCHAR(10);
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK;RESIGNAL;END;
+ START TRANSACTION;
+ CALL _hs_lock_hall(p_hall,v_cap,v_status);CALL _hs_require_actor(p_actor,'ADMIN');
+ IF EXISTS(SELECT 1 FROM BOOKING WHERE HallID=p_hall AND BookingStatus='Approved' AND TIMESTAMP(BookingDate,EndTime)>CURRENT_TIMESTAMP) THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='Cancel future approved reservations before retiring this hall.';END IF;
+ IF EXISTS(SELECT 1 FROM BOOKING WHERE HallID=p_hall) OR EXISTS(SELECT 1 FROM HALL_BLOCK WHERE HallID=p_hall) OR EXISTS(SELECT 1 FROM ROOM_ISSUE WHERE HallID=p_hall) THEN
+  UPDATE LECTURE_HALL SET OperationalStatus='Inactive' WHERE HallID=p_hall;
+ ELSE
+  DELETE FROM HALL_FACILITY WHERE HallID=p_hall;DELETE FROM LECTURE_HALL WHERE HallID=p_hall;
+ END IF;
+ COMMIT;
+END$$
+
 -- END LECTURER APPLICATION PROCEDURES
 
 DELIMITER ;
@@ -1113,34 +1237,58 @@ INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Political Science' WHERE NOT EXIS
 INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Social Statistics' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Social Statistics');
 INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Sociology' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Sociology');
 INSERT INTO DEPARTMENT(DepartmentName) SELECT 'Sport Science and Physical Education' WHERE NOT EXISTS(SELECT 1 FROM DEPARTMENT WHERE DepartmentName='Sport Science and Physical Education');
+
+-- Published UOK classroom capacities, checked 2026-11-12: https://cbs.kln.ac.lk/classrooms
 INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A4','A4 · MIT Building','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A4');
-INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A7','A7 · Faculty of Science','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A7');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A7','A7 · Teaching Building','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A7');
 INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A8','A8 · Auditorium Building','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A8');
-INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A11','A11 · Faculty of Science','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A11');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'A11','A11 · Teaching Building','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='A11');
 INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'B1','B1 · Science Building','Faculty of Science, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='B1');
 INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'K14','K14 · Humanities Building','Faculty of Humanities, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='K14');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'F4','F4 · Teaching Building','University of Kelaniya, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='F4');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'K1','K1 · Teaching Building','University of Kelaniya, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='K1');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'K2','K2 · Teaching Building','University of Kelaniya, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='K2');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'K27','K27 · Teaching Building','University of Kelaniya, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='K27');
+INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription) SELECT 'K28','K28 · Teaching Building','University of Kelaniya, Dalugama' WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='K28');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'201',NULL,350,'Active' FROM BUILDING WHERE BuildingCode='F4' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='201');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'102',NULL,100,'Active' FROM BUILDING WHERE BuildingCode='F4' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='102');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'101',NULL,80,'Active' FROM BUILDING WHERE BuildingCode='F4' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='101');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'002',NULL,350,'Active' FROM BUILDING WHERE BuildingCode='K2' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='002');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'201',NULL,100,'Active' FROM BUILDING WHERE BuildingCode='K1' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='201');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'001',NULL,100,'Active' FROM BUILDING WHERE BuildingCode='K27' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='001');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'201',NULL,80,'Active' FROM BUILDING WHERE BuildingCode='K28' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='201');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'204',NULL,60,'Active' FROM BUILDING WHERE BuildingCode='K14' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='204');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'402',NULL,60,'Active' FROM BUILDING WHERE BuildingCode='K14' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='402');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'205',NULL,50,'Active' FROM BUILDING WHERE BuildingCode='K14' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='205');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'307',NULL,50,'Active' FROM BUILDING WHERE BuildingCode='K14' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='307');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'403',NULL,50,'Active' FROM BUILDING WHERE BuildingCode='K14' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='403');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'306',NULL,40,'Active' FROM BUILDING WHERE BuildingCode='K14' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='306');
+INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity,OperationalStatus) SELECT BuildingID,'201',NULL,25,'Active' FROM BUILDING WHERE BuildingCode='K14' AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL h WHERE h.BuildingID=BUILDING.BuildingID AND h.HallNo='201');
+INSERT INTO FACILITY(FacilityName,Description) SELECT 'Projector','Projection equipment; assign per-hall quantities after local inspection.' WHERE NOT EXISTS(SELECT 1 FROM FACILITY WHERE FacilityName='Projector');
+INSERT INTO FACILITY(FacilityName,Description) SELECT 'Audio system','Audio equipment; working quantities require a local inventory.' WHERE NOT EXISTS(SELECT 1 FROM FACILITY WHERE FacilityName='Audio system');
+INSERT INTO FACILITY(FacilityName,Description) SELECT 'Internet access','Connectivity listed by the university; verify in each hall.' WHERE NOT EXISTS(SELECT 1 FROM FACILITY WHERE FacilityName='Internet access');
 SET @demo_department=(SELECT MIN(DepartmentID) FROM DEPARTMENT WHERE DepartmentName='Industrial Management');
 INSERT INTO BUILDING(BuildingCode,BuildingName,LocationDescription)
 SELECT 'HS-DEMO','HallSync Demo Block','Synthetic practice location'
-WHERE NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='HS-DEMO');
+WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM BUILDING WHERE BuildingCode='HS-DEMO');
 SET @demo_building=(SELECT BuildingID FROM BUILDING WHERE BuildingCode='HS-DEMO');
 INSERT INTO FACILITY(FacilityName,Description)
-SELECT 'Projector','Demo equipment type' WHERE NOT EXISTS(SELECT 1 FROM FACILITY WHERE FacilityName='Projector');
+SELECT 'Projector','Demo equipment type' WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM FACILITY WHERE FacilityName='Projector');
 SET @demo_facility=(SELECT FacilityID FROM FACILITY WHERE FacilityName='Projector');
 INSERT INTO COURSE_UNIT(DepartmentID,CourseCode,CourseTitle)
-SELECT @demo_department,'HS-DEMO-101','HallSync Practice Course' WHERE NOT EXISTS(SELECT 1 FROM COURSE_UNIT WHERE CourseCode='HS-DEMO-101');
+SELECT @demo_department,'HS-DEMO-101','HallSync Practice Course' WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM COURSE_UNIT WHERE CourseCode='HS-DEMO-101');
 INSERT INTO STUDENT_GROUP(DepartmentID,GroupName,IntakeYear,StudyYear)
 SELECT @demo_department,'HallSync Demo Group A',2026,1
-WHERE NOT EXISTS(SELECT 1 FROM STUDENT_GROUP WHERE DepartmentID=@demo_department AND GroupName='HallSync Demo Group A' AND IntakeYear=2026);
+WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM STUDENT_GROUP WHERE DepartmentID=@demo_department AND GroupName='HallSync Demo Group A' AND IntakeYear=2026);
 INSERT INTO LECTURE_HALL(BuildingID,HallNo,Floor,Capacity)
-SELECT @demo_building,'DEMO-01','1',100 WHERE NOT EXISTS(SELECT 1 FROM LECTURE_HALL WHERE BuildingID=@demo_building AND HallNo='DEMO-01');
+SELECT @demo_building,'DEMO-01','1',100 WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM LECTURE_HALL WHERE BuildingID=@demo_building AND HallNo='DEMO-01');
 SET @demo_hall=(SELECT HallID FROM LECTURE_HALL WHERE BuildingID=@demo_building AND HallNo='DEMO-01');
 INSERT INTO HALL_FACILITY(HallID,FacilityID,Quantity,WorkingQuantity)
-SELECT @demo_hall,@demo_facility,2,2 WHERE NOT EXISTS(SELECT 1 FROM HALL_FACILITY WHERE HallID=@demo_hall AND FacilityID=@demo_facility);
-INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'Demo Administrator A','demo_admin_a@example.invalid','demo_admin_a','$argon2id$v=19$m=19456,t=2,p=1$TEgTofH6aDZ8F5EJaVwDpA$bB1xKeFOb/8Z+45ExaOfVG+VKmJoOHFDXsUah0bDCs8','AdminStaff' WHERE NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='demo_admin_a');
-INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'Demo Administrator B','demo_admin_b@example.invalid','demo_admin_b','$argon2id$v=19$m=19456,t=2,p=1$UxBj1mOHy9P11FHfEhbQew$PZ2ywTwdH+Hvf2K95CenhhfiL0p2ggh6MY/x/550e84','AdminStaff' WHERE NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='demo_admin_b');
-INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'Demo Lecturer','demo_lecturer@example.invalid','demo_lecturer','$argon2id$v=19$m=19456,t=2,p=1$zKYjaFauBb9X7W9Ni0oFNA$eSraz0MW1h3ugjF/aPt42JwgUNSUSDz+ScDYsad2Vak','Lecturer' WHERE NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='demo_lecturer');
-INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'Demo Student','demo_student@example.invalid','demo_student','$argon2id$v=19$m=19456,t=2,p=1$Si9+QWj8FPKFJxPENvB2KQ$mpOmBn67zbJC9GlXH33Sv3NRwAlLx1mMzp82n7ow5r4','Student' WHERE NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='demo_student');
+SELECT @demo_hall,@demo_facility,2,2 WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM HALL_FACILITY WHERE HallID=@demo_hall AND FacilityID=@demo_facility);
+INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'Demo Administrator A','demo_admin_a@example.invalid','demo_admin_a','$argon2id$v=19$m=19456,t=2,p=1$TEgTofH6aDZ8F5EJaVwDpA$bB1xKeFOb/8Z+45ExaOfVG+VKmJoOHFDXsUah0bDCs8','AdminStaff' WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='demo_admin_a');
+INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'Demo Administrator B','demo_admin_b@example.invalid','demo_admin_b','$argon2id$v=19$m=19456,t=2,p=1$UxBj1mOHy9P11FHfEhbQew$PZ2ywTwdH+Hvf2K95CenhhfiL0p2ggh6MY/x/550e84','AdminStaff' WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='demo_admin_b');
+INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'Demo Lecturer','demo_lecturer@example.invalid','demo_lecturer','$argon2id$v=19$m=19456,t=2,p=1$zKYjaFauBb9X7W9Ni0oFNA$eSraz0MW1h3ugjF/aPt42JwgUNSUSDz+ScDYsad2Vak','Lecturer' WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='demo_lecturer');
+INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'Demo Student','demo_student@example.invalid','demo_student','$argon2id$v=19$m=19456,t=2,p=1$Si9+QWj8FPKFJxPENvB2KQ$mpOmBn67zbJC9GlXH33Sv3NRwAlLx1mMzp82n7ow5r4','Student' WHERE @hallsync_test_mode=1 AND NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='demo_student');
 SELECT AccountID,Username,Role,IsActive FROM USER_ACCOUNT WHERE Username IN ('demo_admin_a','demo_admin_b','demo_lecturer','demo_student') ORDER BY AccountID;
 
 
@@ -1197,6 +1345,18 @@ GRANT EXECUTE ON PROCEDURE hallsync_db.sp_review_lecturer_application TO 'hallsy
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_get_lecturer_registration_status TO 'hallsync_application';
 -- END LECTURER APPLICATION GRANTS
 
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_report_room_issue TO 'hallsync_application';
+
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_list_room_issues TO 'hallsync_application';
+
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_resolve_room_issue TO 'hallsync_application';
+
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_manage_account TO 'hallsync_application';
+
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_edit_hall TO 'hallsync_application';
+
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_remove_hall TO 'hallsync_application';
+
 -- SECTION 8: READ-ONLY VERIFICATION
 -- Metadata and integrity inspection. These statements only read data.
 SELECT 'Base tables' AS ObjectType,COUNT(*) AS ActualCount,12 AS ExpectedCount
@@ -1232,3 +1392,19 @@ WHERE k.BookingStatus='Approved' AND x.BlockStatus='Active';
 SELECT k.BookingID FROM BOOKING k WHERE k.BookingType IN ('Lecture','Tutorial') AND NOT EXISTS(SELECT 1 FROM BOOKING_GROUP g WHERE g.BookingID=k.BookingID);
 SELECT k.BookingID,k.ExpectedAttendance,h.Capacity FROM BOOKING k JOIN LECTURE_HALL h ON h.HallID=k.HallID
 WHERE k.BookingStatus='Approved' AND TIMESTAMP(k.BookingDate,k.EndTime)>CURRENT_TIMESTAMP AND (k.ExpectedAttendance>h.Capacity OR h.OperationalStatus<>'Active');
+
+-- SECTION 9: LOCAL CONNECTION LOGIN (existing passwords are never reset)
+DELIMITER $$
+DROP PROCEDURE IF EXISTS _hs_connection_setup$$
+CREATE PROCEDURE _hs_connection_setup()
+BEGIN
+ IF @hallsync_manage_login=1 THEN
+  CREATE USER IF NOT EXISTS 'hallsync_app'@'127.0.0.1' IDENTIFIED BY RANDOM PASSWORD REQUIRE SSL;
+  GRANT 'hallsync_application' TO 'hallsync_app'@'127.0.0.1';
+  SET DEFAULT ROLE 'hallsync_application' TO 'hallsync_app'@'127.0.0.1';
+ END IF;
+END$$
+CALL _hs_connection_setup()$$
+DROP PROCEDURE _hs_connection_setup$$
+DELIMITER ;
+SELECT 'HallSync 3.0 ready. Keep any generated password private. Restart run_hallsync.cmd.' AS SetupResult;

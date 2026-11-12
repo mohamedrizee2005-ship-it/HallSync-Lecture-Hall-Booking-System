@@ -26,7 +26,7 @@ public final class CampusDirectory {
         AccessRules.administrator(user);
         Set<String> departments=new HashSet<>();for(var d:app.departments.list())departments.add(key(d.getDepartmentName()));
         Set<String> buildings=new HashSet<>();for(var b:app.catalog.buildings())buildings.add(key(b.code()));
-        int addedDepartments=0,addedBuildings=0;
+        int addedDepartments=0,addedBuildings=0,addedHalls=0;
         for(JsonElement f:DATA.getAsJsonArray("faculties"))for(JsonElement n:f.getAsJsonObject().getAsJsonArray("departments")) {
             String name=n.getAsString();if(departments.add(key(name))) { app.departments.add(user,name);addedDepartments++; }
         }
@@ -34,6 +34,15 @@ public final class CampusDirectory {
             var b=e.getAsJsonObject();String code=b.get("code").getAsString();
             if(buildings.add(key(code))) { app.catalog.addBuilding(user,code,b.get("name").getAsString(),b.get("location").getAsString());addedBuildings++; }
         }
-        return Map.of("departmentsAdded",addedDepartments,"buildingsAdded",addedBuildings,"hallsAdded",0);
+        var known=app.catalog.halls();var actualBuildings=app.catalog.buildings();
+        for(var item:DATA.getAsJsonArray("venues")) {
+            var v=item.getAsJsonObject();if(v.get("capacity").isJsonNull())continue;
+            String code=v.get("buildingCode").getAsString(),number=v.get("number").getAsString();
+            if(known.stream().noneMatch(h->h.buildingCode().equalsIgnoreCase(code)&&h.number().equalsIgnoreCase(number))) {
+                int building=actualBuildings.stream().filter(b->b.code().equalsIgnoreCase(code)).findFirst().orElseThrow().id();
+                app.catalog.addHall(user,building,number,v.get("floor").isJsonNull()?null:v.get("floor").getAsString(),v.get("capacity").getAsInt());addedHalls++;
+            }
+        }
+        return Map.of("departmentsAdded",addedDepartments,"buildingsAdded",addedBuildings,"hallsAdded",addedHalls);
     }
 }

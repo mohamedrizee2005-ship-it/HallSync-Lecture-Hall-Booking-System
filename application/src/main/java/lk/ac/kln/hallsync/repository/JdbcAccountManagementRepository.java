@@ -13,6 +13,7 @@ public final class JdbcAccountManagementRepository implements AccountManagementR
     @Override public int provision(int actor, AccountDraft d, String hash, String role) throws SQLException {
         return db.callForId("{CALL sp_provision_account(?,?,?,?,?,?,?,?)}", actor, d.departmentId(), d.fullName(), d.email(), d.username(), hash, role);
     }
+    @Override public void manage(int actor,int account,String role,boolean active) throws SQLException { db.call("{CALL sp_manage_account(?,?,?,?)}",actor,account,role,active); }
     @Override public List<AccountSummary> list(int actor, Integer department) throws SQLException {
         return db.callRows("{CALL sp_list_accounts(?,?)}", r -> new AccountSummary(r.getInt("AccountID"),
                 r.getObject("DepartmentID", Integer.class), r.getString("DepartmentName"), r.getString("FullName"),
