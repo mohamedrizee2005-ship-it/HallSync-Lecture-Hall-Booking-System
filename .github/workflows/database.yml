@@ -36,7 +36,9 @@ jobs:
           HALLSYNC_TEST_HOST: 127.0.0.1
           HALLSYNC_TEST_USER: root
           HALLSYNC_TEST_PASSWORD: ''
-        run: .venv/bin/python database/tests/run_checks.py
+        run: |
+          .venv/bin/python database/tests/check_normal_install.py
+          .venv/bin/python database/tests/run_checks.py
       - uses: actions/upload-artifact@v4
         with:
           name: HallSync-database-validation
