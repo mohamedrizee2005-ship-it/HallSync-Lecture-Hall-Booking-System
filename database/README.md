@@ -19,7 +19,7 @@ Refresh SCHEMAS and check the final verification grid:
 | Other unique keys | 7 |
 | CHECK constraints | 28 |
 | Views | 4 |
-| Procedures | 25: 19 public and 6 internal |
+| Procedures | 27: 21 public and 6 internal |
 
 `08_verify_database.sql` can inspect an existing installation without changing its data. MySQL DDL can commit independently; keep Action Output if setup stops.
 

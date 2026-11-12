@@ -35,7 +35,7 @@
       "passed": true
     },
     {
-      "name": "25 procedures",
+      "name": "27 procedures",
       "passed": true
     },
     {
@@ -410,7 +410,7 @@
   "unique_keys": 7,
   "check_constraints": 28,
   "views": 4,
-  "procedures": 25,
+  "procedures": 27,
   "concurrency": {
     "approval_races": 5,
     "approval_block_races": 3,
