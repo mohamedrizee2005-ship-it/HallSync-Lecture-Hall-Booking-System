@@ -100,7 +100,7 @@ def main():
         for kind,count in [('PRIMARY KEY',11),('FOREIGN KEY',14),('UNIQUE',7),('CHECK',28)]:
             ok(str(count)+' '+kind,scalar(c,"SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=%s AND constraint_type=%s",(db,kind))==count)
         ok('4 views',scalar(c,"SELECT COUNT(*) FROM information_schema.views WHERE table_schema=%s",(db,))==4)
-        ok('25 procedures',scalar(c,"SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=%s",(db,))==25)
+        ok('27 procedures',scalar(c,"SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=%s",(db,))==27)
         initial_users=scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')
         install(c,(ROOT/'07_demo_data.sql').read_text(),db,role)
         ok('Demo seed can repeat without duplicate accounts',scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')==initial_users)
@@ -266,7 +266,7 @@ def main():
         query(c,'USE '+db)
         ok('No approved overlaps remain',scalar(c,"SELECT COUNT(*) FROM BOOKING x JOIN BOOKING y ON x.HallID=y.HallID AND x.BookingDate=y.BookingDate AND x.BookingID<y.BookingID AND x.StartTime<y.EndTime AND x.EndTime>y.StartTime WHERE x.BookingStatus='Approved' AND y.BookingStatus='Approved'")==0)
         report=dict(mysql_version=scalar(c,'SELECT VERSION()'),checks_passed=len(checks),checks=checks,
-          tables=11,columns_count=61,primary_keys=11,foreign_keys_count=14,unique_keys=7,check_constraints=28,views=4,procedures=25,
+          tables=11,columns_count=61,primary_keys=11,foreign_keys_count=14,unique_keys=7,check_constraints=28,views=4,procedures=27,
           concurrency={'approval_races':5,'approval_block_races':3,'lock_wait_checked':True},
           department_preserved=True,**m)
         (REPORT_DIR/'database_validation.json').write_text(json.dumps(report,indent=2,default=str))

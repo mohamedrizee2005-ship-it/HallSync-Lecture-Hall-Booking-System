@@ -74,5 +74,13 @@
   {
     "name": "sp_add_hall",
     "params": "IN p_actor INT,IN p_building INT,IN p_number VARCHAR(20),IN p_floor VARCHAR(10),IN p_capacity INT,OUT p_id INT"
+  },
+  {
+    "name": "sp_list_hall_blocks",
+    "params": "IN p_actor INT"
+  },
+  {
+    "name": "sp_list_accounts",
+    "params": "IN p_actor INT,IN p_department INT"
   }
 ]

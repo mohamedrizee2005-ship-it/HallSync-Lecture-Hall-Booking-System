@@ -521,4 +521,38 @@ END;
 COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS sp_list_hall_blocks$$
+CREATE PROCEDURE sp_list_hall_blocks(IN p_actor INT)
+SQL SECURITY DEFINER
+BEGIN
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+ SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+ START TRANSACTION;
+ CALL _hs_require_actor(p_actor,'ADMIN');
+ SELECT x.BlockID,x.HallID,b.BuildingCode,h.HallNo,u.FullName AS RecordedByName,
+        x.BlockStart,x.BlockEnd,x.Reason,x.BlockStatus
+ FROM HALL_BLOCK x JOIN LECTURE_HALL h ON h.HallID=x.HallID
+ JOIN BUILDING b ON b.BuildingID=h.BuildingID
+ JOIN USER_ACCOUNT u ON u.AccountID=x.RecordedByID
+ ORDER BY x.BlockStart DESC,x.BlockID DESC;
+ COMMIT;
+END$$
+
+DROP PROCEDURE IF EXISTS sp_list_accounts$$
+CREATE PROCEDURE sp_list_accounts(IN p_actor INT,IN p_department INT)
+SQL SECURITY DEFINER
+BEGIN
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+ SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+ START TRANSACTION;
+ CALL _hs_require_actor(p_actor,'ADMIN');
+ SELECT u.AccountID,u.DepartmentID,d.DepartmentName,u.FullName,u.Email,u.Username,u.Role,u.IsActive
+ FROM USER_ACCOUNT u LEFT JOIN DEPARTMENT d ON d.DepartmentID=u.DepartmentID
+ WHERE p_department IS NULL OR u.DepartmentID=p_department
+ ORDER BY u.Username,u.AccountID;
+ -- Password hashes are deliberately excluded.
+ COMMIT;
+END$$
+
+
 DELIMITER ;

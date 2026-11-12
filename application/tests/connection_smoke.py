@@ -3,6 +3,7 @@ from pathlib import Path
 import importlib.util
 import os
 import json
+from datetime import date, timedelta
 import secrets
 from argon2 import PasswordHasher
 import subprocess
@@ -61,6 +62,13 @@ def main():
                                      capture_output=True, text=True, timeout=45)
             assert missing.returncode != 0 and "Configuration error" in missing.stderr
 
+            counts_before = db_checks.query(c, f"SELECT (SELECT COUNT(*) FROM {schema}.USER_ACCOUNT),(SELECT COUNT(*) FROM {schema}.DEPARTMENT)")
+            upgrade = (ROOT/'application/03_upgrade_desktop_reads.sql').read_text()
+            db_checks.install(c,upgrade,schema,role)
+            db_checks.install(c,upgrade,schema,role)
+            assert counts_before == db_checks.query(c, f"SELECT (SELECT COUNT(*) FROM {schema}.USER_ACCOUNT),(SELECT COUNT(*) FROM {schema}.DEPARTMENT)")
+            print('Desktop read upgrade preserves existing rows and can repeat safely.')
+
             application_password = "கற்றல்-" + secrets.token_urlsafe(24)
             encoded = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1).hash(application_password)
             actor = db_checks.scalar(c, "SELECT AccountID FROM " + schema + ".USER_ACCOUNT WHERE Role='AdminStaff' AND IsActive=1 ORDER BY AccountID LIMIT 1")
@@ -70,6 +78,12 @@ def main():
                                 (actor,department,username,username+'@example.invalid',username,encoded,account_role))
             db_checks.query(c, f"UPDATE {schema}.USER_ACCOUNT SET IsActive=0 WHERE Username='ci_inactive'")
             db_checks.query(c, f"UPDATE {schema}.USER_ACCOUNT SET PasswordHash='$argon2id$malformed' WHERE Username='ci_bad_hash'")
+            ended_day = date.today() - timedelta(days=2)
+            fixture_hall = db_checks.scalar(c,f"SELECT MIN(HallID) FROM {schema}.LECTURE_HALL")
+            fixture_requester = db_checks.scalar(c,f"SELECT AccountID FROM {schema}.USER_ACCOUNT WHERE Username='ci_lecturer'")
+            fixture_reviewer = db_checks.scalar(c,f"SELECT AccountID FROM {schema}.USER_ACCOUNT WHERE Username='ci_admin'")
+            db_checks.query(c,f"INSERT INTO {schema}.BOOKING(RequesterID,HallID,BookingDate,StartTime,EndTime,Purpose,BookingType,ExpectedAttendance,BookingStatus,RequestedAt,ReviewerID,Decision,ReviewedAt) VALUES(%s,%s,%s,'08:00','09:00','CI ended approved session','Event',10,'Approved',%s,%s,'Approved',%s)",
+                            (fixture_requester,fixture_hall,ended_day,str(ended_day)+' 06:00:00',fixture_reviewer,str(ended_day)+' 07:00:00'))
             classpath = os.pathsep.join([str(ROOT / 'application/target/test-classes'),
                                         str(ROOT / 'application/target/hallsync-connection-check.jar')])
             feature_env = dict(env, HALLSYNC_RUN_INTEGRATION_TESTS='1',
@@ -85,6 +99,22 @@ def main():
             report = dict(java_version=java_version, mysql_version=db_checks.scalar(c,'SELECT VERSION()'),
                           checks_passed=len(passed), checks=passed)
             (ROOT/'application/target/department-validation.json').write_text(json.dumps(report,indent=2))
+            workflows = subprocess.run(['java','-cp',classpath,'lk.ac.kln.hallsync.FullApplicationIntegrationCheck',str(config)],
+                                       env=feature_env,capture_output=True,text=True,timeout=180)
+            assert workflows.returncode == 0, workflows.stdout + workflows.stderr
+            assert password not in workflows.stdout + workflows.stderr and application_password not in workflows.stdout + workflows.stderr
+            print(workflows.stdout,end='')
+            desktop = subprocess.run(['xvfb-run','-a','java','-cp',classpath,'lk.ac.kln.hallsync.DesktopSmokeCheck',str(config)],
+                                     cwd=ROOT,env=feature_env,capture_output=True,text=True,timeout=180)
+            assert desktop.returncode == 0, desktop.stdout + desktop.stderr
+            assert password not in desktop.stdout + desktop.stderr and application_password not in desktop.stdout + desktop.stderr
+            print(desktop.stdout,end='')
+            workflow_checks = [line.removeprefix('PASS - ') for line in workflows.stdout.splitlines() if line.startswith('PASS - ')]
+            desktop_checks = [line.removeprefix('PASS - ') for line in desktop.stdout.splitlines() if line.startswith('PASS - ')]
+            complete_report = dict(java_version=java_version,mysql_version=report['mysql_version'],
+                                   department_checks=passed,workflow_checks=workflow_checks,desktop_checks=desktop_checks,
+                                   total_checks=len(passed)+len(workflow_checks)+len(desktop_checks),read_upgrade_preserves_data=True)
+            (ROOT/'application/target/application-validation.json').write_text(json.dumps(complete_report,indent=2))
             menu = subprocess.run(['java','-cp',str(ROOT/'application/target/hallsync-connection-check.jar'),
                                    'lk.ac.kln.hallsync.DepartmentApp',str(config)],
                                   input='1\n2\n1\n3\nIndustrial\n4\n0\n', env=env,

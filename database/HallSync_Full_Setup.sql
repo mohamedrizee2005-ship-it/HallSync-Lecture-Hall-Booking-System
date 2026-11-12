@@ -838,6 +838,40 @@ END;
 COMMIT;
 END$$
 
+DROP PROCEDURE IF EXISTS sp_list_hall_blocks$$
+CREATE PROCEDURE sp_list_hall_blocks(IN p_actor INT)
+SQL SECURITY DEFINER
+BEGIN
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+ SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+ START TRANSACTION;
+ CALL _hs_require_actor(p_actor,'ADMIN');
+ SELECT x.BlockID,x.HallID,b.BuildingCode,h.HallNo,u.FullName AS RecordedByName,
+        x.BlockStart,x.BlockEnd,x.Reason,x.BlockStatus
+ FROM HALL_BLOCK x JOIN LECTURE_HALL h ON h.HallID=x.HallID
+ JOIN BUILDING b ON b.BuildingID=h.BuildingID
+ JOIN USER_ACCOUNT u ON u.AccountID=x.RecordedByID
+ ORDER BY x.BlockStart DESC,x.BlockID DESC;
+ COMMIT;
+END$$
+
+DROP PROCEDURE IF EXISTS sp_list_accounts$$
+CREATE PROCEDURE sp_list_accounts(IN p_actor INT,IN p_department INT)
+SQL SECURITY DEFINER
+BEGIN
+ DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+ SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+ START TRANSACTION;
+ CALL _hs_require_actor(p_actor,'ADMIN');
+ SELECT u.AccountID,u.DepartmentID,d.DepartmentName,u.FullName,u.Email,u.Username,u.Role,u.IsActive
+ FROM USER_ACCOUNT u LEFT JOIN DEPARTMENT d ON d.DepartmentID=u.DepartmentID
+ WHERE p_department IS NULL OR u.DepartmentID=p_department
+ ORDER BY u.Username,u.AccountID;
+ -- Password hashes are deliberately excluded.
+ COMMIT;
+END$$
+
+
 DELIMITER ;
 
 
@@ -940,6 +974,9 @@ GRANT EXECUTE ON PROCEDURE hallsync_db.sp_add_facility TO 'hallsync_application'
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_add_course TO 'hallsync_application';
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_add_student_group TO 'hallsync_application';
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_add_hall TO 'hallsync_application';
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_list_hall_blocks TO 'hallsync_application';
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_list_accounts TO 'hallsync_application';
+
 
 
 USE hallsync_db;
@@ -956,7 +993,7 @@ UNION ALL SELECT 'Foreign keys',COUNT(*),14 FROM information_schema.table_constr
 UNION ALL SELECT 'Other unique keys',COUNT(*),7 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='UNIQUE'
 UNION ALL SELECT 'CHECK constraints',COUNT(*),28 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='CHECK'
 UNION ALL SELECT 'Views',COUNT(*),4 FROM information_schema.views WHERE table_schema=DATABASE()
-UNION ALL SELECT 'Procedures',COUNT(*),25 FROM information_schema.routines WHERE routine_schema=DATABASE() AND routine_type='PROCEDURE';
+UNION ALL SELECT 'Procedures',COUNT(*),27 FROM information_schema.routines WHERE routine_schema=DATABASE() AND routine_type='PROCEDURE';
 
 SELECT TABLE_NAME,GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION) AS PrimaryKeyColumns
 FROM information_schema.key_column_usage WHERE table_schema=DATABASE() AND constraint_name='PRIMARY'

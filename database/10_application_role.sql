@@ -33,3 +33,6 @@ GRANT EXECUTE ON PROCEDURE hallsync_db.sp_add_facility TO 'hallsync_application'
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_add_course TO 'hallsync_application';
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_add_student_group TO 'hallsync_application';
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_add_hall TO 'hallsync_application';
+
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_list_hall_blocks TO 'hallsync_application';
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_list_accounts TO 'hallsync_application';

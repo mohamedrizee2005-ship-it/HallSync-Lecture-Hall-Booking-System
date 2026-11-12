@@ -42,3 +42,7 @@ Department names are required and limited to 100 characters. The existing schema
 The numbered scripts and old combined installers remain source/reference files. The normal Workbench entry point is **HallSync_Full_Setup.sql**.
 
 The database suite runs 100 functional, privilege, rollback and independent-connection concurrency checks on disposable schemas. Its report is [tests/database_validation.json](tests/database_validation.json). The learning PDF is distributed separately from this repository.
+
+## Existing desktop installation
+
+An already working database needs only `application/03_upgrade_desktop_reads.sql`. Run that repeatable read-procedure upgrade with the Workbench administrator connection. It preserves all tables/data and adds two administrator-only reads. The current full installer includes them for new installations. Do not rerun the full installer on a complete database.

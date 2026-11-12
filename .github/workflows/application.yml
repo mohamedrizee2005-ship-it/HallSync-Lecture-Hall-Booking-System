@@ -1,7 +1,7 @@
-name: Check Java department feature
+name: Check HallSync Java application
 on:
   push:
-    branches: [main, codex/application-connection]
+    branches: [main, codex/application-connection, codex/complete-java-v1]
     paths:
       - 'application/**'
       - 'database/HallSync_Full_Setup.sql'
@@ -12,9 +12,9 @@ permissions:
   contents: read
 jobs:
   connection:
-    name: Java ${{ matrix.java }} department checks
+    name: Java ${{ matrix.java }} application checks
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 18
     strategy:
       fail-fast: false
       matrix:
@@ -43,11 +43,13 @@ jobs:
           cache-dependency-path: application/pom.xml
       - name: Build the Java classes
         run: mvn -B -ntp -f application/pom.xml clean package
+      - name: Install virtual display for real Swing checks
+        run: sudo apt-get update -qq && sudo apt-get install -y xvfb
       - name: Install database test helpers
         run: |
           python3 -m venv .venv
           .venv/bin/pip install PyMySQL==1.1.1 argon2-cffi==25.1.0
-      - name: Test JDBC, authentication and department operations
+      - name: Test JDBC, application workflows and Swing screens
         env:
           HALLSYNC_TEST_HOST: 127.0.0.1
           HALLSYNC_TEST_USER: root
@@ -55,5 +57,7 @@ jobs:
         run: .venv/bin/python application/tests/connection_smoke.py
       - uses: actions/upload-artifact@v4
         with:
-          name: department-validation-java-${{ matrix.java }}
-          path: application/target/department-validation.json
+          name: application-validation-java-${{ matrix.java }}
+          path: |
+            application/target/*validation.json
+            application/target/desktop-*.png
