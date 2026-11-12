@@ -20,13 +20,15 @@ public final class DesktopSmokeCheck {
     }
     public static void main(String[] args) throws Exception {
         if (!"1".equals(System.getenv("HALLSYNC_RUN_INTEGRATION_TESTS"))) { throw new IllegalStateException("Explicit test enablement required."); }
-        DatabaseConnectionFactory connections=new DatabaseConnectionFactory(DatabaseConfig.load(Path.of(args[0])));
+        DatabaseConfig settings=DatabaseConfig.load(Path.of(args[0]));
+        DatabaseConnectionFactory connections=new DatabaseConnectionFactory(settings);
         try (Connection c=connections.open()) { if (!c.getCatalog().startsWith("hallsync_connection_")) { throw new IllegalStateException("Disposable schema required."); } }
         ApplicationServices app=new ApplicationServices(connections);
         String password=System.getenv("HALLSYNC_APPLICATION_TEST_PASSWORD");
         try {
             SwingUtilities.invokeAndWait(() -> {
                 DesktopTheme.apply();
+                firstConnection(settings);
                 for (String username : List.of("ci_admin","ci_lecturer","ci_student")) {
                     LoginDialog login=new LoginDialog(app);
                     javax.swing.Timer fill=new javax.swing.Timer(200,e -> {
@@ -66,6 +68,27 @@ public final class DesktopSmokeCheck {
         } finally {
             SwingUtilities.invokeAndWait(() -> { for (Window window : Window.getWindows()) { window.dispose(); } });
         }
+    }
+    private static void firstConnection(DatabaseConfig settings) {
+        try {
+            Path folder=Files.createTempDirectory("hallsync-desktop-config-"); Path file=folder.resolve("db.local.properties");
+            try {
+                ConnectionSetupDialog setup=new ConnectionSetupDialog(file);
+                javax.swing.Timer fill=new javax.swing.Timer(200,e -> {
+                    List<JTextField> fields=all(setup,JTextField.class).stream().filter(t -> !(t instanceof JPasswordField)).toList();
+                    fields.get(0).setText(settings.getUrl()); fields.get(1).setText(settings.getUsername());
+                    all(setup,JPasswordField.class).get(0).setText(settings.getPassword());
+                    all(setup,JButton.class).stream().filter(b -> b.getText().equals("Test and save connection")).findFirst().orElseThrow().doClick();
+                });
+                fill.setRepeats(false); fill.start(); setup.setVisible(true);
+                check("First connection form tests and saves a working limited login",setup.configuration().isPresent() && Files.exists(file));
+                check("First connection password entry is hidden",all(setup,JPasswordField.class).size()==1);
+                Path unused=folder.resolve("cancelled.local.properties"); ConnectionSetupDialog cancelled=new ConnectionSetupDialog(unused);
+                javax.swing.Timer cancel=new javax.swing.Timer(150,e -> all(cancelled,JButton.class).stream().filter(b -> b.getText().equals("Cancel")).findFirst().orElseThrow().doClick());
+                cancel.setRepeats(false); cancel.start(); cancelled.setVisible(true);
+                check("Cancelling first connection does not write configuration",cancelled.configuration().isEmpty() && !Files.exists(unused));
+            } finally { Files.deleteIfExists(file); Files.deleteIfExists(folder); }
+        } catch (Exception error) { throw new IllegalStateException("First-connection screen test failed.",error); }
     }
     private static void capture(Window window,String name) {
         try {

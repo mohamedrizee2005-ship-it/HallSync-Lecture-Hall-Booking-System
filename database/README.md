@@ -1,48 +1,41 @@
 # HallSync database
 
-Target: MySQL 8.0.46, database `hallsync_db`.
+**One full installer:** [HallSync_Full_Setup.sql](HallSync_Full_Setup.sql), for MySQL 8.0.46 and `hallsync_db`.
 
-## First installation
+## Installation
 
-Open **HallSync_Full_Setup.sql** in your administrator Workbench connection. Enable **Stop Script Execution On Errors**, clear any text selection, and execute the file once.
+In an administrator Workbench connection, enable **Stop Script Execution On Errors** and run the full installer once. It supports a new/empty database or the matching Department-only starting point and preserves existing department rows. It stops for inspection if the complete schema is already installed. It does not drop tables or databases.
 
-Supported starting points: no database, an empty database, or the matching DEPARTMENT-only database. Existing department rows are preserved. A partial or completed installation stops at preflight and requires inspection rather than a blind rerun.
+An existing working desktop database needs only [the small read upgrade](../application/03_upgrade_desktop_reads.sql) if not already applied. Do not rerun the full installer. Then follow [the application setup](../application/README.md).
 
-Refresh SCHEMAS and check the final verification grid:
+## Read the SQL in this order
 
-| Object | Expected count |
+The complete file has eight numbered sections:
+
+| Section | Learn |
 | --- | --- |
-| Base tables | 11 |
-| Columns | 61 |
-| Primary keys | 11 |
-| Foreign keys | 14 |
-| Other unique keys | 7 |
-| CHECK constraints | 28 |
-| Views | 4 |
-| Procedures | 27: 21 public and 6 internal |
+| 1 | Create/select the database; UTF-8 character set and collation. |
+| 2 | Department: the first parent table. |
+| 3 | Preflight and remaining tables; primary keys, foreign keys, UNIQUE and CHECK rules. |
+| 4 | Procedures; input validation, ownership, transactions and hall-row locking. |
+| 5 | Views used for booking details, equipment, status totals and scheduled usage. |
+| 6 | Synthetic demo data; the seeded passwords are not usable sign-in passwords. |
+| 7 | Restricted application role and procedure/view privileges. |
+| 8 | Read-only object-count and integrity verification. |
 
-`08_verify_database.sql` can inspect an existing installation without changing its data. MySQL DDL can commit independently; keep Action Output if setup stops.
+The numbered `01_...sql` through `10_...sql` files are smaller reference components for studying the same ideas. They are **not additional installation steps**. The older duplicate combined installers have been removed. `08_verify_database.sql` can inspect an existing database without modifying rows.
 
-## Application connection
+## Expected structure
 
-The role `hallsync_application` supplies limited catalog/view reads and procedure execution. The application authenticates people separately and supplies actor IDs from verified sessions. Write procedures recheck active roles and own their transactions.
+| Object | Count |
+| --- | --- |
+| Tables / columns | 11 / 61 |
+| Primary keys / foreign keys | 11 / 14 |
+| Other unique keys / CHECKs | 7 / 28 |
+| Views / procedures | 4 / 27 (21 public, 6 internal) |
 
-See [application/README.md](../application/README.md) for the existing local connection, VS Code and the department feature.
+Pending does not reserve a hall. Independent approval rechecks activity, hall status/capacity, overlapping approvals and blocks under a hall lock. Only owners edit Pending requests. Approved moves require cancellation/new request. Rejected, Cancelled and Completed are terminal; history remains.
 
-## Existing rules
+Lecture/Tutorial needs a course and a group. Times use Asia/Colombo (+05:30); the start timestamp must be future. Department names are required but are not unique in this schema. Application passwords are Argon2id hashes. Load real existing future reservations before trusting real university availability.
 
-Pending requests do not reserve a hall. Approval, hall blocks and relevant changes coordinate with hall-row locks. Administrators cannot review their own requests. Only Pending bookings can be edited; approved rescheduling requires cancellation and a new request. Rejected, Cancelled and Completed records remain terminal and retain history.
-
-Lecture/Tutorial requires a course and student group. Capacity, future times and valid intervals are checked. Every connection uses Sri Lanka time through `+05:30`. Application user passwords use Argon2id hashes; real future timetable data must be loaded before real availability is reliable.
-
-Department names are required and limited to 100 characters. The existing schema does not make department names unique; DepartmentID is the primary key.
-
-## Tests and earlier sources
-
-The numbered scripts and old combined installers remain source/reference files. The normal Workbench entry point is **HallSync_Full_Setup.sql**.
-
-The database suite runs 100 functional, privilege, rollback and independent-connection concurrency checks on disposable schemas. Its report is [tests/database_validation.json](tests/database_validation.json). The learning PDF is distributed separately from this repository.
-
-## Existing desktop installation
-
-An already working database needs only `application/03_upgrade_desktop_reads.sql`. Run that repeatable read-procedure upgrade with the Workbench administrator connection. It preserves all tables/data and adds two administrator-only reads. The current full installer includes them for new installations. Do not rerun the full installer on a complete database.
+Tests use disposable schemas, never your laptop database. See [tests/README.md](tests/README.md) and [the validation snapshot](tests/database_validation.json).

@@ -1,12 +1,39 @@
-# HallSync Java application
+# HallSync application - setup and learning notes
 
-Open the entire repository in VS Code and select **Run and Debug > HallSync: Full desktop application**. Keep the working database and private local settings.
+Start with the root [README](../README.md). The normal Windows entry point is `run_hallsync.cmd`; in VS Code use **HallSync: Full desktop application**.
 
-## 1. Reuse the working connection
+## Your existing connection
 
-Keep `application/db.local.properties`. It is ignored by Git. A new extracted ZIP needs a copy of that one local file from your previous working `application` folder. The example properties file is only a template.
+Reuse `db.local.properties` from your working application folder. It is ignored by Git and is never overwritten by first-run setup. If the file is missing, HallSync opens a form for the JDBC URL, limited MySQL username and private password. **Test and save connection** verifies a booking-view read before writing the new file. Backslashes and other special password characters are escaped by Java Properties automatically.
 
-From a terminal inside `application`:
+The form does not create/reset the database or provision MySQL accounts. A first installation needs `database/HallSync_Full_Setup.sql` and `01_create_application_login.sql` first. Existing installations need only the repeatable `03_upgrade_desktop_reads.sql` if the two administrator read routines are missing.
+
+`HALLSYNC_DB_PASSWORD` overrides a file password when set. If it is set during first-run setup, its value is initially supplied in the hidden password field; later loading also uses the environment override. To use only the local file in Command Prompt, clear an old override with `set "HALLSYNC_DB_PASSWORD="`.
+
+## First application administrator
+
+The MySQL login `hallsync_app` connects Java to the database. The HallSync sign-in window uses a different account from `USER_ACCOUNT`. Demo account passwords were discarded and cannot be used to sign in.
+
+If you already have a usable active AdminStaff account, use it and skip this setup. Otherwise:
+
+1. From the repository root, open Command Prompt or the VS Code Integrated Terminal.
+2. Run the commands below. The password tool needs a terminal that supports hidden input.
+3. Enter and confirm a private 15-128 character application password/passphrase. The tool prints its encoded Argon2id hash.
+4. Copy `02_provision_project_admin.example.sql` to **02_provision_project_admin.local.sql**. Privately replace the hash placeholder; keep the SQL quotes.
+5. Open that local SQL file using your Workbench administrator connection. Execute only its setup section once.
+6. Start HallSync. Sign in as **project_admin** with the application password you chose.
+
+```cmd
+cd application
+mvn clean package
+java -cp target/hallsync-connection-check.jar lk.ac.kln.hallsync.auth.AdminPasswordTool
+```
+
+Keep the hash, local SQL and password private. If the username already exists, use the existing account; do not delete/reset data. Initial bootstrap through Workbench is a controlled administrator action. Normal screens never let users type another person's actor ID.
+
+## Useful commands
+
+Run these from the `application` folder:
 
 ```cmd
 mvn clean package
@@ -14,61 +41,41 @@ java -jar target/hallsync-connection-check.jar
 java -cp target/hallsync-connection-check.jar lk.ac.kln.hallsync.HallSyncApp
 ```
 
-The diagnostic JAR name/default entry point are kept for compatibility. The last command launches the desktop. Maven resolves dependencies; no manual Java-source copying or JDBC JAR download is needed. JDK 17+ is required; JDK 21 and 26 are checked in CI.
+The first command builds. The second checks the connection. The third opens the full desktop. The diagnostic JAR filename is retained for compatibility. Maven supplies the JDBC and password dependencies.
 
-## 2. Upgrade an existing database
+## Demonstrate the complete project
 
-Run `03_upgrade_desktop_reads.sql` in your current Workbench administrator connection. It adds `sp_list_hall_blocks` and `sp_list_accounts`, then grants their execution to the application role. Both routines require an active administrator. Account results exclude hashes.
+1. Sign in as an administrator. Use **Accounts** to provision a lecturer with a private password.
+2. Confirm a building/hall, course and student group exist in **Catalogues**.
+3. Sign in as the lecturer. Search a future date/time and request a suitable hall.
+4. For Lecture/Tutorial choose a course and at least one group. Submit and show **Pending**.
+5. Sign in as an independent administrator and approve it from **Review bookings**.
+6. Repeat the availability search: that hall/time is now unavailable. An adjacent interval remains available.
+7. Cancel the future approval and show its retained history.
+8. Create/cancel a maintenance block and show the effect on availability.
+9. Show equipment quantities, account department filtering and report/CSV export.
 
-This upgrade preserves all tables, data, users and existing booking procedures and can repeat. A fresh installation using the latest `database/HallSync_Full_Setup.sql` already includes it. Do not rerun the full installer against an installed database.
+An administrator's own request requires another administrator to review it. Student registration always creates Student; staff roles are provisioned by an administrator.
 
-## 3. First application administrator
+## Read the Java folders
 
-`hallsync_app` is the **MySQL connection login**. HallSync sign-in uses a separate account in `USER_ACCOUNT`. Synthetic demo passwords were discarded and cannot be used to sign in.
+| Folder | Responsibility |
+| --- | --- |
+| `model` | Immutable row/input models and enums. |
+| `repository` | Contracts and parameterised JDBC implementations. |
+| `service` | Validation, ownership and role rules. |
+| `auth` | Private login lookup, Argon2id and verified identity. |
+| `desktop` | Swing screens, reusable tables/forms and background workers. |
+| `ui` | Optional earlier department-console learning example. |
 
-If you already have an active AdminStaff account with a known password, use it. Otherwise run this in the Integrated Terminal or Command Prompt:
+`ApplicationServices` composes the objects. `HallSyncApp` starts the desktop. `ConnectionCheck` remains a diagnostic. The root README gives a small study order; start there rather than reading every file at once.
 
-```cmd
-java -cp target/hallsync-connection-check.jar lk.ac.kln.hallsync.auth.AdminPasswordTool
-```
+Repository interfaces demonstrate abstraction/polymorphism. Feature panels inherit reusable behaviour from TablePanel. RecordTableModel overrides Swing table methods. Records are immutable data classes, not SQL tables. Roles are permissions rather than User subclasses.
 
-Enter and confirm a private 15-128 character password/passphrase. Copy `02_provision_project_admin.example.sql` to `02_provision_project_admin.local.sql`, replace the hash placeholder privately, and run only that setup section once using your Workbench administrator connection. Sign in as `project_admin` with your chosen application password.
+JDBC and hashing run through SwingWorker; Swing widgets stay on the event thread. Write procedures own their transaction and recheck current data/permissions. Java never replaces the database locking protocol. CSV export preserves UTF-8, escapes fields and neutralises spreadsheet formula prefixes.
 
-Keep the hash, password, local setup SQL and local properties out of GitHub. If the account already exists, use it; do not delete data or rerun the database installer to fix sign-in.
+## Save and update
 
-## 4. Screens and rules
+Ctrl+S saves local source. Maven builds it. Successful service calls change MySQL rows. Git commit/push uploads tracked source. These are separate actions. A ZIP is a source snapshot; use a Git clone for convenient later pull/push. Review local changes before updating and preserve private settings.
 
-- **Student:** availability, equipment lookup and approved/completed timetable. Public registration always creates Student.
-- **Lecturer:** those features plus personal booking requests, Pending edits and future cancellation.
-- **AdminStaff:** requester features plus independent review, completion, catalogue creation, hall configuration, equipment, blocks, account provisioning/filtering and reports.
-
-Lecture/Tutorial requests require a course and at least one group. Requests belong to the signed-in requester. Pending does not reserve a hall. Approval rechecks active accounts, capacity, blocks and overlap inside the existing database transaction. An administrator cannot review their own request. Approved moves require cancellation plus a new request. Rejected, Cancelled and Completed are terminal.
-
-Times use Asia/Colombo. Availability is a snapshot. Blocks cannot silently displace Approved bookings. Hall changes cannot invalidate future approvals. Equipment requires `Quantity > 0` and `0 <= WorkingQuantity <= Quantity`.
-
-Use **Accounts** to provision lecturers and a second administrator. Public registration cannot choose staff roles. A second independent administrator is needed to approve an administrator's own request.
-
-## 5. Code structure and OOP
-
-- `model`: immutable data classes; most are Java records. Department remains a conventional immutable class.
-- `repository`: interfaces and parameterised JDBC implementations. JdbcExecutor owns JDBC cleanup and procedure calls.
-- `service`: validation, ownership and role checks. Actor IDs come from authenticated identities.
-- `auth`: Argon2id, private login lookup and verified identity.
-- `desktop`: Swing screens, forms, reusable read-only tables and background workers.
-- `ApplicationServices`: creates and connects services/repositories.
-- `HallSyncApp`: desktop sign-in, dashboard and sign-out.
-- `DepartmentApp` / `ConnectionCheck`: earlier learning and diagnostic entry points.
-
-Swing components stay on the event dispatch thread. UiTasks/SwingWorker runs JDBC and hashing in the background. Write procedures own their transaction; Java does not wrap another transaction around them. Bound parameters separate input values from SQL. CSV exports preserve UTF-8, escape fields and neutralise spreadsheet formula prefixes.
-
-Repository interfaces demonstrate abstraction and polymorphism. Feature panels inherit reusable behaviour from TablePanel. RecordTableModel overrides AbstractTableModel methods. Composition connects services to repositories. Roles are permissions, not Java class inheritance.
-
-This trusted local prototype must not distribute shared database credentials to untrusted clients. A public deployment needs a backend boundary. TLS REQUIRED encrypts the connection; a remote deployment also requires certificate/host verification.
-
-## 6. Save and update
-
-Ctrl+S saves local source. Maven builds it. Service calls change database rows. Git commit/push uploads tracked source. These are separate actions.
-
-Use a proper Git clone for future updates: save/commit your own tracked changes, fetch/pull main and review conflicts. A ZIP is a source snapshot without Git history. Do not reset or overwrite private local settings to update it.
-
-The separate PDF explains Windows/VS Code setup, architecture, workflows, tests and presentation questions. No study PDF is committed here.
+The source is an academic local prototype. A public/untrusted client deployment requires a backend boundary; do not distribute shared MySQL credentials. TLS REQUIRED encrypts the local connection; remote identity verification requires suitable certificates/host verification.

@@ -3,6 +3,7 @@ package lk.ac.kln.hallsync;
 import lk.ac.kln.hallsync.desktop.*;
 import javax.swing.*;
 import java.nio.file.Path;
+import java.nio.file.Files;
 
 /** Desktop entry point. Run with application as the working directory. */
 public final class HallSyncApp {
@@ -12,7 +13,15 @@ public final class HallSyncApp {
             DesktopTheme.apply();
             try {
                 Path file=Path.of(args.length==0 ? "db.local.properties" : args[0]);
-                ApplicationServices app=new ApplicationServices(new DatabaseConnectionFactory(DatabaseConfig.load(file)));
+                DatabaseConfig config;
+                if (Files.exists(file)) {
+                    config=DatabaseConfig.load(file);
+                } else {
+                    ConnectionSetupDialog setup=new ConnectionSetupDialog(file); setup.setVisible(true);
+                    if (setup.configuration().isEmpty()) { return; }
+                    config=setup.configuration().get();
+                }
+                ApplicationServices app=new ApplicationServices(new DatabaseConnectionFactory(config));
                 showLogin(app);
             } catch (Exception error) { UiErrors.show(null,error); }
         });

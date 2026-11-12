@@ -2,7 +2,8 @@
 -- Prerequisite: HallSync_Full_Setup.sql completed successfully.
 -- Enable Stop Script Execution On Errors in Workbench.
 -- The CREATE USER result includes a PRIVATE generated password.
--- Copy it into db.local.properties. Do not share that result grid.
+-- Enter it privately in the first-connection form, or use db.local.properties.
+-- Do not share that result grid.
 -- If this login already exists, stop and inspect it instead of recreating it.
 
 USE hallsync_db;

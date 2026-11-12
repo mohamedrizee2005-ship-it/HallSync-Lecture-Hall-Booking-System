@@ -11,6 +11,18 @@
 -- Existing department rows are preserved. No database or table is dropped.
 -- If other tables already exist, the preflight stops for inspection.
 -- Demo account hashes have random discarded passwords, not usable login passwords.
+--
+-- STUDY THIS FILE FROM TOP TO BOTTOM:
+--   Section 1: Create/select the database (UTF-8 character set and collation).
+--   Section 2: Department, the first parent table.
+--   Section 3: Preflight, other tables, primary keys, foreign keys and CHECKs.
+--   Section 4: Procedures: validation, transactions, ownership and booking locks.
+--   Section 5: Views: computed reports rather than duplicate stored report rows.
+--   Section 6: Synthetic demonstration data (not the university timetable).
+--   Section 7: Restricted application role and grants.
+--   Section 8: Read-only verification queries and expected object counts.
+-- Reference components are in the numbered SQL files. Do not run them as extra
+-- installation steps after this complete installer.
 
 -- SECTION 1: CREATE / SELECT THE DATABASE
 CREATE DATABASE IF NOT EXISTS hallsync_db
@@ -880,6 +892,7 @@ SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 SET SESSION time_zone = '+05:30';
 SET SESSION sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
+-- SECTION 5: VIEWS AND REPORTS
 CREATE OR REPLACE SQL SECURITY DEFINER VIEW v_booking_details AS
 SELECT k.BookingID,k.BookingDate,k.StartTime,k.EndTime,k.BookingType,k.Purpose,k.ExpectedAttendance,k.BookingStatus,k.RequestedAt,
  k.RequesterID,r.FullName AS RequesterName,k.HallID,b.BuildingCode,h.HallNo,h.Capacity,k.CourseID,c.CourseCode,c.CourseTitle,
@@ -904,6 +917,7 @@ FROM BOOKING WHERE BookingStatus IN ('Approved','Completed') GROUP BY HallID,Boo
 -- ReservedMinutes is scheduled time, not measured actual use or student attendance.
 
 
+-- SECTION 6: SYNTHETIC DEMONSTRATION DATA
 -- Synthetic reference data for SQL demonstrations. Existing matching rows are preserved.
 -- Random discarded passwords are used for the demo account hashes; these are not login-ready accounts.
 -- Real accounts and timetable reservations must be provisioned before real availability is trusted.
@@ -939,6 +953,7 @@ INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role)
 SELECT AccountID,Username,Role,IsActive FROM USER_ACCOUNT WHERE Username IN ('demo_admin_a','demo_admin_b','demo_lecturer','demo_student') ORDER BY AccountID;
 
 
+-- SECTION 7: RESTRICTED APPLICATION ROLE
 -- Creates a least-privilege role, not a database login or password.
 -- Assign it to a dedicated backend DB account during application connection setup.
 -- The application authenticates users and supplies actor IDs from trusted sessions.
@@ -984,6 +999,7 @@ SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 SET SESSION time_zone = '+05:30';
 SET SESSION sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
+-- SECTION 8: READ-ONLY VERIFICATION
 -- Metadata and integrity inspection. These statements only read data.
 SELECT 'Base tables' AS ObjectType,COUNT(*) AS ActualCount,11 AS ExpectedCount
 FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'

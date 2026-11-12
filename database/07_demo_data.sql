@@ -1,3 +1,5 @@
+-- STUDY / REFERENCE COMPONENT. Normal first installation uses HallSync_Full_Setup.sql.
+-- Do not execute this as an extra installation step after the full installer.
 -- Synthetic reference data for SQL demonstrations. Existing matching rows are preserved.
 -- Random discarded passwords are used for the demo account hashes; these are not login-ready accounts.
 -- Real accounts and timetable reservations must be provisioned before real availability is trusted.

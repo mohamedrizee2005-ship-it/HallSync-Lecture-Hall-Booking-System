@@ -1,3 +1,5 @@
+-- STUDY / REFERENCE COMPONENT. Normal first installation uses HallSync_Full_Setup.sql.
+-- Do not execute this as an extra installation step after the full installer.
 -- Run once after steps 01 and 02. Keep the existing DEPARTMENT and its data.
 -- Enable Stop Script Execution On Errors in Workbench.
 USE hallsync_db;

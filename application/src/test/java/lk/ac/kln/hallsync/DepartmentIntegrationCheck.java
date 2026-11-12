@@ -9,6 +9,10 @@ import lk.ac.kln.hallsync.model.Department;
 import lk.ac.kln.hallsync.repository.JdbcDepartmentRepository;
 import lk.ac.kln.hallsync.service.DepartmentService;
 import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -41,6 +45,7 @@ public final class DepartmentIntegrationCheck {
     }
 
     private static void run(DatabaseConnectionFactory connections, char[] password) throws Exception {
+        configurationChecks();
         JdbcDepartmentRepository repository = new JdbcDepartmentRepository(connections);
         DepartmentService departments = new DepartmentService(repository);
         Argon2PasswordHasher hashes = new Argon2PasswordHasher();
@@ -166,6 +171,29 @@ public final class DepartmentIntegrationCheck {
         } catch (SQLException error) {
             check("Application login cannot read USER_ACCOUNT directly", error.getErrorCode() == 1142);
         }
+    }
+
+    private static void configurationChecks() throws Exception {
+        String secret="  private\\value:=\"கற்றல்";
+        DatabaseConfig config=DatabaseConfig.fromValues(" jdbc:mysql://127.0.0.1:3306/example "," example_user ",secret.toCharArray());
+        check("Entered URL and username are trimmed",config.getUrl().equals("jdbc:mysql://127.0.0.1:3306/example") && config.getUsername().equals("example_user"));
+        check("Entered password preserves significant spaces and characters",config.getPassword().equals(secret));
+        expect("Connection form rejects non-MySQL URL",IllegalArgumentException.class,() -> DatabaseConfig.fromValues("other:database","user",secret.toCharArray()));
+        expect("Connection form rejects blank username",IllegalArgumentException.class,() -> DatabaseConfig.fromValues(config.getUrl()," ",secret.toCharArray()));
+        expect("Connection form rejects empty password",IllegalArgumentException.class,() -> DatabaseConfig.fromValues(config.getUrl(),"user",new char[0]));
+        expect("Connection form rejects placeholder password",IllegalArgumentException.class,() -> DatabaseConfig.fromValues(config.getUrl(),"user","REPLACE_WITH_PRIVATE_PASSWORD".toCharArray()));
+        Path folder=Files.createTempDirectory("hallsync-config-"); Path file=folder.resolve("db.local.properties");
+        try {
+            config.saveNew(file); Properties stored=new Properties();
+            try (var reader=Files.newBufferedReader(file,StandardCharsets.UTF_8)) { stored.load(reader); }
+            check("Properties saving round-trips backslashes, quotes, spaces and Unicode",secret.equals(stored.getProperty("db.password")) && config.getUrl().equals(stored.getProperty("db.url")));
+            expect("First-run save cannot overwrite an existing settings file",FileAlreadyExistsException.class,() -> config.saveNew(file));
+            Properties after=new Properties(); try (var reader=Files.newBufferedReader(file,StandardCharsets.UTF_8)) { after.load(reader); }
+            check("A refused overwrite preserves the existing file",secret.equals(after.getProperty("db.password")));
+            if (Files.getFileStore(file).supportsFileAttributeView("posix")) {
+                check("New local settings are owner-only on POSIX",Files.getPosixFilePermissions(file).equals(java.nio.file.attribute.PosixFilePermissions.fromString("rw-------")));
+            }
+        } finally { Files.deleteIfExists(file); Files.deleteIfExists(folder); }
     }
 
     private static void check(String label, boolean result) {

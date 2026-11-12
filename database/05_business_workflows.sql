@@ -1,3 +1,5 @@
+-- STUDY / REFERENCE COMPONENT. Normal first installation uses HallSync_Full_Setup.sql.
+-- Do not execute this as an extra installation step after the full installer.
 -- Install business procedures after 04. Reinstalling procedures preserves table data.
 -- Write procedures own their transaction; call outside an existing transaction.
 -- Actor IDs must come from an authenticated application session, not a form.

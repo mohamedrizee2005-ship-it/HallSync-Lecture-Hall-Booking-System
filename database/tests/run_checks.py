@@ -67,15 +67,6 @@ def prepare_seed():
             encoded=ph.hash(secrets.token_urlsafe(48))
             rows.append("INSERT INTO USER_ACCOUNT(DepartmentID,FullName,Email,Username,PasswordHash,Role) SELECT @demo_department,'%s','%s@example.invalid','%s','%s','%s' WHERE NOT EXISTS(SELECT 1 FROM USER_ACCOUNT WHERE Username='%s');"%(name,username,username,encoded,role,username))
         s=s.replace('-- CI_ACCOUNT_ROWS','\n'.join(rows));p.write_text(s)
-def build_masters():
-    names=['04_complete_schema.sql','05_business_workflows.sql','06_views_and_reports.sql',
-           '07_demo_data.sql','10_application_role.sql','08_verify_database.sql']
-    content='-- Continue the existing hallsync_db. Run once with Stop On Errors enabled.\n'
-    content+='\n\n'.join((ROOT/n).read_text() for n in names)
-    (ROOT/'complete_existing_database.sql').write_text(content)
-    fresh='-- Fresh installation only. The hallsync_db name must not already exist.\n'
-    fresh+=(ROOT/'01_create_database.sql').read_text()+'\n'+(ROOT/'02_create_department.sql').read_text()+'\n'+content
-    (ROOT/'fresh_install.sql').write_text(fresh)
 def metadata(c,db):
     cols=query(c,"SELECT TABLE_NAME,COLUMN_NAME,ORDINAL_POSITION,COLUMN_TYPE,IS_NULLABLE,COLUMN_DEFAULT,EXTRA,COLUMN_KEY FROM information_schema.columns WHERE table_schema=%s AND table_name IN (SELECT table_name FROM information_schema.tables WHERE table_schema=%s AND table_type='BASE TABLE') ORDER BY TABLE_NAME,ORDINAL_POSITION",(db,db))
     columns=[dict(zip(['table','column','ordinal','type','nullable','default','extra','key'],r)) for r in cols]
@@ -84,7 +75,7 @@ def metadata(c,db):
     return dict(columns=columns,foreign_keys=[dict(zip(['table','column','parent','parent_column'],r)) for r in fks],
       constraints=[dict(zip(['table','name','clause'],r)) for r in constraints])
 def main():
-    prepare_seed();build_masters();REPORT_DIR.mkdir(exist_ok=True)
+    prepare_seed();REPORT_DIR.mkdir(exist_ok=True)
     suffix=uuid.uuid4().hex[:10];db='hallsync_validation_'+suffix;role='hs_app_'+suffix
     c=connect();created=[];roles=[];api_user=None
     try:

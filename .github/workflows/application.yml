@@ -1,13 +1,14 @@
 name: Check HallSync Java application
 on:
   push:
-    branches: [main, codex/application-connection, codex/complete-java-v1]
+    branches: [main, codex/application-connection, codex/complete-java-v1, codex/simple-desktop-setup]
     paths:
       - 'application/**'
       - 'database/HallSync_Full_Setup.sql'
       - 'database/tests/run_checks.py'
       - '.github/workflows/application.yml'
       - '.vscode/**'
+      - 'run_hallsync.cmd'
 permissions:
   contents: read
 jobs:

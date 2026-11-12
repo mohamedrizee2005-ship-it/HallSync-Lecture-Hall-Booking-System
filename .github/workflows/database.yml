@@ -1,7 +1,7 @@
 name: Validate HallSync database
 on:
   push:
-    branches: [main, codex/complete-database, codex/application-connection, codex/complete-java-v1]
+    branches: [main, codex/complete-database, codex/application-connection, codex/complete-java-v1, codex/simple-desktop-setup]
     paths:
       - 'database/**'
       - '.github/workflows/database.yml'

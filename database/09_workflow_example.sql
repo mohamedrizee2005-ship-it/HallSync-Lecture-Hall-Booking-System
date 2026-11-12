@@ -1,3 +1,5 @@
+-- STUDY / REFERENCE COMPONENT. Normal first installation uses HallSync_Full_Setup.sql.
+-- Do not execute this as an extra installation step after the full installer.
 USE hallsync_db;
 SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 SET SESSION time_zone = '+05:30';

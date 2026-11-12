@@ -1,3 +1,5 @@
+-- STUDY / REFERENCE COMPONENT. Normal first installation uses HallSync_Full_Setup.sql.
+-- Do not execute this as an extra installation step after the full installer.
 -- HallSync - Step 1: create the project database.
 -- Run once in MySQL Workbench. This step creates an empty database.
 -- If a statement fails, stop and inspect the error before continuing.

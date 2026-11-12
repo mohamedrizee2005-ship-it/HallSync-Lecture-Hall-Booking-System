@@ -1,3 +1,5 @@
+-- STUDY / REFERENCE COMPONENT. Normal first installation uses HallSync_Full_Setup.sql.
+-- Do not execute this as an extra installation step after the full installer.
 -- Creates a least-privilege role, not a database login or password.
 -- Assign it to a dedicated backend DB account during application connection setup.
 -- The application authenticates users and supplies actor IDs from trusted sessions.
