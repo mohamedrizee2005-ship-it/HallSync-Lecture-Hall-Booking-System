@@ -8,8 +8,8 @@ import javax.swing.*;
 public final class BookingsPanel extends TablePanel<Booking> implements Refreshable {
     private final ApplicationServices app; private final AuthenticatedUser user; private final boolean reviewMode;
     public BookingsPanel(ApplicationServices app, AuthenticatedUser user, boolean reviewMode) {
-        super(new String[]{"Booking ID","Date","Start","End","Hall","Course","Type","People","Status","Requester"},
-                b -> new Object[]{b.id(),b.date(),b.start(),b.end(),b.hallLabel(),b.courseCode(),b.type(),b.attendance(),b.status(),b.requesterName()});
+        super(new String[]{"Booking ID","Status","Date","Start","End","Hall","Course","Type","People","Requester"},
+                b -> new Object[]{b.id(),b.status(),b.date(),b.start(),b.end(),b.hallLabel(),b.courseCode(),b.type(),b.attendance(),b.requesterName()});
         this.app=app; this.user=user; this.reviewMode=reviewMode;
         button("Refresh",this::refresh); button("Details",this::details);
         if (reviewMode) {

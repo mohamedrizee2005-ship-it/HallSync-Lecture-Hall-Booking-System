@@ -20,8 +20,9 @@ public class TablePanel<T> extends JPanel {
         super(new BorderLayout(10,14)); setBorder(BorderFactory.createEmptyBorder(18,18,18,18));
         model = new RecordTableModel<>(columns,cells); table = new JTable(model); table.setRowHeight(29);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setIntercellSpacing(new Dimension(8,4));
         table.getTableHeader().setReorderingAllowed(false);
-        for (int i = 0; i < columns.length; i++) { table.getColumnModel().getColumn(i).setPreferredWidth(i == 0 ? 70 : 145); }
+        for (int i = 0; i < columns.length; i++) { table.getColumnModel().getColumn(i).setPreferredWidth(columnWidth(columns[i])); }
         TableRowSorter<RecordTableModel<T>> sorter = new TableRowSorter<>(model); table.setRowSorter(sorter);
         JTextField search = new JTextField(20); search.setToolTipText("Filter these loaded records by any visible column");
         search.getDocument().addDocumentListener(new DocumentListener() {
@@ -41,5 +42,15 @@ public class TablePanel<T> extends JPanel {
         int row = table.getSelectedRow();
         if (row < 0) { throw new IllegalArgumentException("Select one record from the table first."); }
         return model.row(table.convertRowIndexToModel(row));
+    }
+    private static int columnWidth(String label) {
+        return switch (label) {
+            case "ID","Hall ID","Account ID","Block ID","Booking ID","Facility ID" -> 85;
+            case "Date" -> 110;
+            case "Start","End","Floor","People","Capacity","Total","Working","Not working","Active" -> 80;
+            case "Type","Status","Course" -> 100;
+            case "Department name","Building name","Course title","Description","Location","Full name","Email","Reason" -> 230;
+            default -> 150;
+        };
     }
 }

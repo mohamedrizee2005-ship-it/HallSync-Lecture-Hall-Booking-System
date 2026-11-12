@@ -12,7 +12,9 @@ public final class HallBlocksPanel extends TablePanel<HallBlock> implements Refr
     public HallBlocksPanel(ApplicationServices app, AuthenticatedUser user) {
         super(new String[]{"Block ID","Hall","Start","End","Reason","Status","Recorded by"},
                 b -> new Object[]{b.id(),b.hallLabel(),b.start(),b.end(),b.reason(),b.status(),b.recordedBy()});
-        this.app=app; this.user=user; button("Refresh",this::refresh); button("Create hall block",this::create); button("Cancel selected block",this::cancel);
+        this.app=app; this.user=user;
+        table.getColumnModel().getColumn(2).setPreferredWidth(180); table.getColumnModel().getColumn(3).setPreferredWidth(180);
+        button("Refresh",this::refresh); button("Create hall block",this::create); button("Cancel selected block",this::cancel);
     }
     @Override public void refresh() { UiTasks.run(this,"Loading maintenance and closure history...",() -> app.blocks.list(user),this::setRows); }
     private void create() {
