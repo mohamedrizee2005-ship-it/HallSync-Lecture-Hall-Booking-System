@@ -1,45 +1,30 @@
-# HallSync-Lecture-Hall-Booking-System
+# HallSync - Lecture Hall Booking System
 
-## Purpose
+University of Kelaniya, Faculty of Science group-project prototype using Java OOP and MySQL 8.0.46.
 
-HallSync is a university group project to manage lecture hall availability and booking requests for the Faculty of Science, University of Kelaniya, Sri Lanka.
+## Current implementation
 
-The project aims to prevent conflicting approved bookings, help authorised users find suitable halls, and maintain booking records. The system uses MySQL and will connect to an object-oriented application.
+- The database contains 11 tables, 14 foreign keys, 4 views and 25 stored procedures.
+- The Java department feature lists departments, finds by ID, filters by name and adds departments after administrator sign-in.
+- Each Java class has its own file. The model, repository contracts, JDBC implementations, services, authentication and console interface have separate responsibilities.
+- The booking interface and the remaining Java features are later stages.
 
-## Users
+## Start
 
-| User | Responsibility |
-| --- | --- |
-| Student | View hall details and availability. |
-| Lecturer | Submit and manage their own booking requests. |
-| Administrator (AdminStaff) | Manage halls and review requests; their own requests require a different administrator to review them. |
+1. Follow [database/README.md](database/README.md) for a first database installation.
+2. Open this entire repository folder in VS Code and install the recommended Extension Pack for Java.
+3. Follow [application/README.md](application/README.md) to reuse your local connection and run the department menu.
 
-Staff privileges are provisioned by an administrator. Public registration can create only Student accounts.
+The learning PDF is provided separately. Study documents are not stored in this repository.
 
-## Booking workflow
+## Validation
 
-1. A requester selects a hall, date and same-day times, and supplies purpose and attendance.
-2. The request is recorded as Pending. Lecture/Tutorial also requires a course and student group.
-3. An administrator reviews it. Approval rechecks capacity, hall status, approved reservations and active closures.
-4. The approver cannot review their own request.
-5. Approved, Rejected, Cancelled and Completed records retain their history.
+GitHub Actions builds Java on JDK 21 and 26, tests department operations and authentication against disposable MySQL 8.0.46, and runs the database rule suite. The workflows have read-only repository permission.
 
-Pending requests do not reserve a slot. Only Pending bookings can be edited; moving an Approved booking requires cancellation and a new request.
+The database validation snapshot is [database/tests/database_validation.json](database/tests/database_validation.json).
 
-## Database implementation
+## Scope
 
-Start with [the database instructions](database/README.md).
+Reference data is synthetic. Load real future timetable reservations before trusting real hall availability. The first prototype excludes recurring booking series, automatic timetable generation, individual student enrolment and multi-stage approvals.
 
-- **One complete SQL file:** run [HallSync_Full_Setup.sql](database/HallSync_Full_Setup.sql) once. It creates the database and department when missing, then completes the full setup while preserving existing department rows.
-- **Verify afterwards:** run [08_verify_database.sql](database/08_verify_database.sql).
-- **Learn the design:** read [the guide](docs/Database_Guide.md) or download [the PDF](docs/HallSync_Complete_Database_Guide.pdf).
-- **Check evidence:** [MySQL validation report](docs/database_validation.json).
-
-The database package contains 11 tables, 61 columns, 14 foreign keys, 28 CHECK constraints, 4 report views and 19 public workflow procedures.
-A [Java/JDBC connection starter](application/README.md) and the [Department model lesson](application/DEPARTMENT_LESSON.md) are available. Password verification, user sessions, the remaining domain objects and the interface are later stages.
-
-## Prototype scope
-
-This is a Faculty of Science prototype, with synthetic demonstration records rather than an official university inventory or timetable.
-Existing future timetable reservations must be loaded before real availability is trusted.
-The first version excludes recurring series, automatic timetabling, individual enrolment tracking and multi-stage approvals.
+The console is a local learning interface. Database credentials belong to a trusted application environment; public student-facing deployment requires a backend boundary.

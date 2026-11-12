@@ -1,24 +1,16 @@
 # HallSync database
 
-Database: `hallsync_db`. Target server: MySQL 8.0.46.
-The nine-entity ER model becomes 11 tables with 61 columns and 14 foreign keys.
+Target: MySQL 8.0.46, database `hallsync_db`.
 
-## One full setup file
+## First installation
 
-Use **HallSync_Full_Setup.sql** for the complete setup from database creation through final verification. It supports a new database, an empty database, or the matching department-only database you already created.
+Open **HallSync_Full_Setup.sql** in your administrator Workbench connection. Enable **Stop Script Execution On Errors**, clear any text selection, and execute the file once.
 
-1. Download and extract this repository.
-2. In your existing Workbench connection, open **HallSync_Full_Setup.sql**.
-3. Enable **Stop Script Execution On Errors**, clear any text selection, and execute the whole file once.
-4. Refresh SCHEMAS and review the final verification grid.
+Supported starting points: no database, an empty database, or the matching DEPARTMENT-only database. Existing department rows are preserved. A partial or completed installation stops at preflight and requires inspection rather than a blind rerun.
 
-This creates the database and department table when missing, preserves any existing department rows, and adds the remaining tables, workflow procedures, views, demo records and application role. It does not drop a database or table.
+Refresh SCHEMAS and check the final verification grid:
 
-If execution stops, keep the error and table list. DDL is not one rollbackable batch: do not blindly rerun or reset a partly completed installation.
-
-## Expected verification counts
-
-| Object | Count |
+| Object | Expected count |
 | --- | --- |
 | Base tables | 11 |
 | Columns | 61 |
@@ -27,37 +19,26 @@ If execution stops, keep the error and table list. DDL is not one rollbackable b
 | Other unique keys | 7 |
 | CHECK constraints | 28 |
 | Views | 4 |
-| Procedures | 25: 19 public, 6 internal |
+| Procedures | 25: 19 public and 6 internal |
 
-Use `08_verify_database.sql` to recheck metadata and existing reservations without changing data.
+`08_verify_database.sql` can inspect an existing installation without changing its data. MySQL DDL can commit independently; keep Action Output if setup stops.
 
-## Earlier lesson files
+## Application connection
 
-The numbered scripts and the earlier `fresh_install.sql` / `complete_existing_database.sql` profiles remain as lesson and compatibility references. Workbench users can use just **HallSync_Full_Setup.sql**.
+The role `hallsync_application` supplies limited catalog/view reads and procedure execution. The application authenticates people separately and supplies actor IDs from verified sessions. Write procedures recheck active roles and own their transactions.
 
-The individual 04-10 scripts remain readable source files. They are already included in the combined continuation.
-`09_workflow_example.sql` is an optional changing-data demonstration, run once after setup.
+See [application/README.md](../application/README.md) for the existing local connection, VS Code and the department feature.
 
-## Rules and responsibilities
+## Existing rules
 
-- Pending requests do not reserve the hall. Approval rechecks capacity and overlaps.
-- Lecturers and authorised AdminStaff request their own bookings. AdminStaff may not review their own requests.
-- Students view availability; public registration fixes their role to Student.
-- Only Pending bookings may be edited. Approved rescheduling means cancellation and a new request.
-- Rejected, Cancelled and Completed bookings are terminal and retained.
-- Booking approvals, hall blocks, edits and capacity/status changes coordinate through hall-row locks.
-- Write procedures own their transactions; call outside an existing transaction.
-- Every application actor ID must come from a verified login session. The database does not authenticate the human behind a supplied ID.
-- Use Argon2id in the application. SQL stores the encoded hash; its prefix check is not cryptographic validation.
-- Synthetic demo account passwords are random and discarded. They are for SQL demonstrations, not ready-made login credentials.
-- The MySQL role denies raw table writes. Inspect any pre-existing grants before reusing a role; the grant script adds permissions rather than revoking older ones.
-- Load the real future timetable before treating availability as complete.
+Pending requests do not reserve a hall. Approval, hall blocks and relevant changes coordinate with hall-row locks. Administrators cannot review their own requests. Only Pending bookings can be edited; approved rescheduling requires cancellation and a new request. Rejected, Cancelled and Completed records remain terminal and retain history.
 
-## Documentation and tests
+Lecture/Tutorial requires a course and student group. Capacity, future times and valid intervals are checked. Every connection uses Sri Lanka time through `+05:30`. Application user passwords use Argon2id hashes; real future timetable data must be loaded before real availability is reliable.
 
-Read [the complete guide](../docs/Database_Guide.md) or download [the PDF](../docs/HallSync_Complete_Database_Guide.pdf).
-Validation evidence is in [database_validation.json](../docs/database_validation.json).
+Department names are required and limited to 100 characters. The existing schema does not make department names unique; DepartmentID is the primary key.
 
-The GitHub Actions job uses a disposable MySQL 8.0.46 service and isolated generated validation schemas.
-It runs functional, rollback, privilege and independent-connection concurrency checks.
-The workflow has read-only repository permission and uploads reviewable artifacts; it does not push repository changes.
+## Tests and earlier sources
+
+The numbered scripts and old combined installers remain source/reference files. The normal Workbench entry point is **HallSync_Full_Setup.sql**.
+
+The database suite runs 100 functional, privilege, rollback and independent-connection concurrency checks on disposable schemas. Its report is [tests/database_validation.json](tests/database_validation.json). The learning PDF is distributed separately from this repository.

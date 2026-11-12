@@ -1,4 +1,4 @@
-name: Check Java database connection
+name: Check Java department feature
 on:
   push:
     branches: [main, codex/application-connection]
@@ -7,12 +7,17 @@ on:
       - 'database/HallSync_Full_Setup.sql'
       - 'database/tests/run_checks.py'
       - '.github/workflows/application.yml'
+      - '.vscode/**'
 permissions:
   contents: read
 jobs:
   connection:
+    name: Java ${{ matrix.java }} department checks
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
+    strategy:
+      matrix:
+        java: ['21', '26']
     services:
       mysql:
         image: mysql:8.0.46
@@ -32,18 +37,22 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: ${{ matrix.java }}
           cache: maven
           cache-dependency-path: application/pom.xml
-      - name: Build the Java checker
+      - name: Build the Java classes
         run: mvn -B -ntp -f application/pom.xml clean package
       - name: Install database test helpers
         run: |
           python3 -m venv .venv
           .venv/bin/pip install PyMySQL==1.1.1 argon2-cffi==25.1.0
-      - name: Test JDBC against disposable MySQL
+      - name: Test JDBC, authentication and department operations
         env:
           HALLSYNC_TEST_HOST: 127.0.0.1
           HALLSYNC_TEST_USER: root
           HALLSYNC_TEST_PASSWORD: ''
         run: .venv/bin/python application/tests/connection_smoke.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: department-validation-java-${{ matrix.java }}
+          path: application/target/department-validation.json

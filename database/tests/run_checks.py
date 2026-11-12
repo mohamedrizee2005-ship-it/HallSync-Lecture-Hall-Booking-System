@@ -7,7 +7,7 @@ import pymysql
 from argon2 import PasswordHasher
 
 ROOT=Path(__file__).resolve().parents[1]
-DOCS=ROOT.parent/'docs'
+REPORT_DIR=ROOT/'tests'
 CONFIG=dict(host=os.getenv('HALLSYNC_TEST_HOST','127.0.0.1'),
  user=os.getenv('HALLSYNC_TEST_USER','root'),
  password=os.getenv('HALLSYNC_TEST_PASSWORD',''),autocommit=True,charset='utf8mb4')
@@ -84,7 +84,7 @@ def metadata(c,db):
     return dict(columns=columns,foreign_keys=[dict(zip(['table','column','parent','parent_column'],r)) for r in fks],
       constraints=[dict(zip(['table','name','clause'],r)) for r in constraints])
 def main():
-    prepare_seed();build_masters();DOCS.mkdir(exist_ok=True)
+    prepare_seed();build_masters();REPORT_DIR.mkdir(exist_ok=True)
     suffix=uuid.uuid4().hex[:10];db='hallsync_validation_'+suffix;role='hs_app_'+suffix
     c=connect();created=[];roles=[];api_user=None
     try:
@@ -269,7 +269,7 @@ def main():
           tables=11,columns_count=61,primary_keys=11,foreign_keys_count=14,unique_keys=7,check_constraints=28,views=4,procedures=25,
           concurrency={'approval_races':5,'approval_block_races':3,'lock_wait_checked':True},
           department_preserved=True,**m)
-        (DOCS/'database_validation.json').write_text(json.dumps(report,indent=2,default=str))
+        (REPORT_DIR/'database_validation.json').write_text(json.dumps(report,indent=2,default=str))
         print('VALIDATION PASSED',len(checks),'checks; MySQL',report['mysql_version'],flush=True)
     finally:
         if api_user:

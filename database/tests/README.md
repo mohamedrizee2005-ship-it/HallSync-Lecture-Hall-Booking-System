@@ -9,7 +9,7 @@ Local execution needs Python, PyMySQL, argon2-cffi and an administrator-level te
 Use an isolated MySQL instance for development checks. Supply connection values through `HALLSYNC_TEST_HOST`, `HALLSYNC_TEST_USER` and `HALLSYNC_TEST_PASSWORD`; do not save credentials in source files.
 
 Run `python database/tests/run_checks.py` from the repository root.
-The test report is written to `docs/database_validation.json`.
+The test report is written to `database/tests/database_validation.json`.
 The tests also assemble the combined installation scripts from their individual source files.
 
 End-user authentication is outside these SQL contract tests. The application must derive actor IDs from authenticated sessions.

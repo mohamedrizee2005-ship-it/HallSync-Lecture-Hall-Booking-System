@@ -7,3 +7,4 @@ __pycache__/
 *.log
 application/target/
 application/db.local.properties
+application/*.local.sql

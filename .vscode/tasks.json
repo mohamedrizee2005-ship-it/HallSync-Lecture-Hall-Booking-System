@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "HallSync: Maven package",
+      "type": "shell",
+      "command": "mvn",
+      "args": [
+        "clean",
+        "package"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/application"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$javac"
+      ]
+    }
+  ]
+}

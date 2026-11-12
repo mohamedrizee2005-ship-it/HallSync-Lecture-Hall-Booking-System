@@ -1,0 +1,35 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "HallSync: Department menu",
+      "request": "launch",
+      "mainClass": "lk.ac.kln.hallsync.DepartmentApp",
+      "cwd": "${workspaceFolder}/application",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "preLaunchTask": "HallSync: Maven package"
+    },
+    {
+      "type": "java",
+      "name": "HallSync: Connection check",
+      "request": "launch",
+      "mainClass": "lk.ac.kln.hallsync.ConnectionCheck",
+      "cwd": "${workspaceFolder}/application",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "preLaunchTask": "HallSync: Maven package"
+    },
+    {
+      "type": "java",
+      "name": "HallSync: Admin password setup",
+      "request": "launch",
+      "mainClass": "lk.ac.kln.hallsync.auth.AdminPasswordTool",
+      "cwd": "${workspaceFolder}/application",
+      "console": "integratedTerminal",
+      "shortenCommandLine": "argfile",
+      "preLaunchTask": "HallSync: Maven package"
+    }
+  ]
+}

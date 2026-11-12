@@ -2,6 +2,9 @@
 from pathlib import Path
 import importlib.util
 import os
+import json
+import secrets
+from argon2 import PasswordHasher
 import subprocess
 import tempfile
 import uuid
@@ -57,6 +60,40 @@ def main():
             missing = subprocess.run(command[:-1] + [str(config.parent / "missing.properties")], env=env,
                                      capture_output=True, text=True, timeout=45)
             assert missing.returncode != 0 and "Configuration error" in missing.stderr
+
+            application_password = "கற்றல்-" + secrets.token_urlsafe(24)
+            encoded = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1).hash(application_password)
+            actor = db_checks.scalar(c, "SELECT AccountID FROM " + schema + ".USER_ACCOUNT WHERE Role='AdminStaff' AND IsActive=1 ORDER BY AccountID LIMIT 1")
+            department = db_checks.scalar(c, "SELECT MIN(DepartmentID) FROM " + schema + ".DEPARTMENT")
+            for username, account_role in [('ci_admin','AdminStaff'), ('ci_student','Student'), ('ci_lecturer','Lecturer'), ('ci_inactive','AdminStaff'), ('ci_bad_hash','Student')]:
+                db_checks.query(c, f"CALL {schema}.sp_provision_account(%s,%s,%s,%s,%s,%s,%s,@fixture_id)",
+                                (actor,department,username,username+'@example.invalid',username,encoded,account_role))
+            db_checks.query(c, f"UPDATE {schema}.USER_ACCOUNT SET IsActive=0 WHERE Username='ci_inactive'")
+            db_checks.query(c, f"UPDATE {schema}.USER_ACCOUNT SET PasswordHash='$argon2id$malformed' WHERE Username='ci_bad_hash'")
+            classpath = os.pathsep.join([str(ROOT / 'application/target/test-classes'),
+                                        str(ROOT / 'application/target/hallsync-connection-check.jar')])
+            feature_env = dict(env, HALLSYNC_RUN_INTEGRATION_TESTS='1',
+                               HALLSYNC_APPLICATION_TEST_PASSWORD=application_password)
+            feature = subprocess.run(['java','-cp',classpath,'lk.ac.kln.hallsync.DepartmentIntegrationCheck',str(config)],
+                                     env=feature_env,capture_output=True,text=True,timeout=120)
+            assert feature.returncode == 0, feature.stdout + feature.stderr
+            assert application_password not in feature.stdout + feature.stderr
+            assert password not in feature.stdout + feature.stderr
+            print(feature.stdout, end='')
+            passed = [line.removeprefix('PASS - ') for line in feature.stdout.splitlines() if line.startswith('PASS - ')]
+            java_version = next(line.split('=',1)[1] for line in feature.stdout.splitlines() if line.startswith('TEST_JAVA_VERSION='))
+            report = dict(java_version=java_version, mysql_version=db_checks.scalar(c,'SELECT VERSION()'),
+                          checks_passed=len(passed), checks=passed)
+            (ROOT/'application/target/department-validation.json').write_text(json.dumps(report,indent=2))
+            menu = subprocess.run(['java','-cp',str(ROOT/'application/target/hallsync-connection-check.jar'),
+                                   'lk.ac.kln.hallsync.DepartmentApp',str(config)],
+                                  input='1\n2\n1\n3\nIndustrial\n4\n0\n', env=env,
+                                  capture_output=True,text=True,timeout=45)
+            assert menu.returncode == 0, menu.stderr
+            assert 'Industrial Management' in menu.stdout
+            assert 'Sign in as an administrator' in menu.stdout
+            assert 'Goodbye.' in menu.stdout
+            print('Department menu: list, find, filter, guest authorization and clean exit passed.')
         print("JDBC integration passed: generated login, default role, encrypted connection, timezone, department read, invalid-password rejection and missing-config handling.")
     finally:
         if user_created:

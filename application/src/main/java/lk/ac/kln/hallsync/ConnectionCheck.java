@@ -1,6 +1,8 @@
 package lk.ac.kln.hallsync;
 
 import lk.ac.kln.hallsync.model.Department;
+import lk.ac.kln.hallsync.repository.DepartmentRepository;
+import lk.ac.kln.hallsync.repository.JdbcDepartmentRepository;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -18,19 +20,22 @@ public final class ConnectionCheck {
             System.err.println("Usage: java -jar hallsync-connection-check.jar [config-file]");
             System.exit(1);
         }
-        Path configPath = Path.of(args.length == 1 ? args[0] : "db.local.properties");
         try {
+            Path configPath = Path.of(args.length == 1 ? args[0] : "db.local.properties");
             DatabaseConfig config = DatabaseConfig.load(configPath);
             DatabaseConnectionFactory factory = new DatabaseConnectionFactory(config);
             try (Connection connection = factory.open()) {
                 printSession(connection);
                 checkEncryption(connection);
-                printDepartments(connection);
             }
+            printDepartments(new JdbcDepartmentRepository(factory));
             System.out.println("Connection check succeeded.");
-        } catch (IOException | IllegalArgumentException error) {
-            System.err.println("Configuration error: check the config-file path and required settings.");
-            System.err.println("See application/README.md. Keep passwords private.");
+        } catch (IllegalArgumentException error) {
+            System.err.println("Configuration error: " + error.getMessage());
+            System.exit(1);
+        } catch (IOException error) {
+            System.err.println("Configuration error: cannot read the settings file ("
+                    + error.getClass().getSimpleName() + "). Check the file path.");
             System.exit(1);
         } catch (SQLException error) {
             // Codes are useful for troubleshooting without exposing credentials.
@@ -64,20 +69,10 @@ public final class ConnectionCheck {
         }
     }
 
-    private static void printDepartments(Connection connection) throws SQLException {
-        String sql = "SELECT DepartmentID, DepartmentName FROM DEPARTMENT ORDER BY DepartmentID LIMIT ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, 100);
-            try (ResultSet rows = statement.executeQuery()) {
-                System.out.println("Departments (up to 100):");
-                while (rows.next()) {
-                    Department department = new Department(
-                            rows.getInt("DepartmentID"),
-                            rows.getString("DepartmentName"));
-                    System.out.printf("%d - %s%n",
-                            department.getDepartmentId(), department.getDepartmentName());
-                }
-            }
+    private static void printDepartments(DepartmentRepository departments) throws SQLException {
+        System.out.println("Departments:");
+        for (Department department : departments.findAll()) {
+            System.out.printf("%d - %s%n", department.getDepartmentId(), department.getDepartmentName());
         }
     }
 }
