@@ -66,7 +66,7 @@ The previous local password-hash helper and administrator SQL template remain av
 
 ## Data and access
 
-The database contains 12 tables, 4 reporting views and 30 procedures. Times use Asia/Colombo. Booking approval and maintenance coordinate under hall-row locks. Pending requests do not reserve halls; terminal records remain in history.
+The database contains 12 tables, 4 reporting views and 31 procedures. Times use Asia/Colombo. Booking approval and maintenance coordinate under hall-row locks. Pending requests do not reserve halls; terminal records remain in history.
 
 ## Accounts and lecturer verification
 
@@ -86,7 +86,7 @@ Existing administrator-provisioned lecturers remain valid. An administrator may 
 
 Lecturer approval and booking approval are independent. After lecturer approval, a booking starts Pending and reserves no room until a separate booking decision. An administrator cannot approve their own hall booking. Students cannot request halls.
 
-The additional ER entity is `LECTURER_APPLICATION`: its unique applicant `AccountID` references `USER_ACCOUNT`; optional `ReviewedByID` references the reviewing administrator in `USER_ACCOUNT`. Existing user IDs, passwords and booking relationships are retained. The upgrade adds only the new table and three restricted procedures, with no raw account-table access granted to the application login.
+The additional ER entity is `LECTURER_APPLICATION`: its unique applicant `AccountID` references `USER_ACCOUNT`; optional `ReviewedByID` references the reviewing administrator in `USER_ACCOUNT`. Existing user IDs, passwords and booking relationships are retained. The upgrade adds only the new table and four restricted procedures, with no raw account-table access granted to the application login.
 
 ## Campus reference data
 
@@ -117,7 +117,7 @@ For a temporary group demonstration, [Cloudflare Quick Tunnels](https://develope
    java -Dhallsync.port=8080 -jar target/hallsync.jar
    ```
 
-3. Open the HTTPS address. Staff use their provisioned HallSync accounts; public registration grants Student access only. Keep MySQL, Java and the tunnel running. The public URL ends when the tunnel stops and changes on the next tunnel launch. To limit a demo to specific visitors, Cloudflare also documents the optional `--allowed-mail` flag.
+3. Open the HTTPS address. Staff sign in with approved or administrator-provisioned accounts. Public student registration grants view-only access; public lecturer applications remain inactive until an administrator verifies and approves them. Keep MySQL, Java and the tunnel running. The public URL ends when the tunnel stops and changes on the next tunnel launch. To limit a demo to specific visitors, Cloudflare also documents the optional `--allowed-mail` flag.
 
 Shared mode accepts only its configured HTTPS origin, marks session cookies Secure, keeps CSRF checks and disables database connection/administrator bootstrap endpoints. The tunnel and Java must use the same fixed port; shared mode fails if that port is busy. Do not expose MySQL port 3306 to the internet. Stop Java and the tunnel with Ctrl+C when finished. For local use again, open a new terminal without `HALLSYNC_PUBLIC_ORIGIN` or run `set "HALLSYNC_PUBLIC_ORIGIN="` before launching.
 

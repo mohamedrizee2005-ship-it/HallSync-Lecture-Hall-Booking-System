@@ -13,7 +13,7 @@ UNION ALL SELECT 'Foreign keys',COUNT(*),16 FROM information_schema.table_constr
 UNION ALL SELECT 'Other unique keys',COUNT(*),8 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='UNIQUE'
 UNION ALL SELECT 'CHECK constraints',COUNT(*),32 FROM information_schema.table_constraints WHERE constraint_schema=DATABASE() AND constraint_type='CHECK'
 UNION ALL SELECT 'Views',COUNT(*),4 FROM information_schema.views WHERE table_schema=DATABASE()
-UNION ALL SELECT 'Procedures',COUNT(*),30 FROM information_schema.routines WHERE routine_schema=DATABASE() AND routine_type='PROCEDURE';
+UNION ALL SELECT 'Procedures',COUNT(*),31 FROM information_schema.routines WHERE routine_schema=DATABASE() AND routine_type='PROCEDURE';
 
 SELECT TABLE_NAME,GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION) AS PrimaryKeyColumns
 FROM information_schema.key_column_usage WHERE table_schema=DATABASE() AND constraint_name='PRIMARY'

@@ -82,7 +82,7 @@ def main():
         for kind,count in [('PRIMARY KEY',12),('FOREIGN KEY',16),('UNIQUE',8),('CHECK',32)]:
             ok(str(count)+' '+kind,scalar(c,"SELECT COUNT(*) FROM information_schema.table_constraints WHERE constraint_schema=%s AND constraint_type=%s",(db,kind))==count)
         ok('4 views',scalar(c,"SELECT COUNT(*) FROM information_schema.views WHERE table_schema=%s",(db,))==4)
-        ok('30 procedures',scalar(c,"SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=%s",(db,))==30)
+        ok('31 procedures',scalar(c,"SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=%s",(db,))==31)
         initial_users=scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')
         install(c,seed,db,role)
         ok('Demo seed can repeat without duplicate accounts',scalar(c,'SELECT COUNT(*) FROM USER_ACCOUNT')==initial_users)
@@ -239,6 +239,7 @@ def main():
         error('Application cannot call internal helper',lambda:call(api,'_hs_require_actor',(a,'ADMIN')),1370)
         ok('Application can read approved reporting interface',isinstance(query(api,'SELECT * FROM v_booking_status_totals'),tuple))
         call(api,'sp_find_available_halls',(day+timedelta(days=180),'09:00','10:00',10));ok('Application can call availability interface',True)
+        ok('Restricted login can read lecturer registration readiness',call(api,'sp_get_lecturer_registration_status')==((1,),))
         # Lecturer registration is atomic and never grants active access before review.
         def applicant(n,department=1,staff='STAFF-001',username=None,email=None):
             return call(api,'sp_register_lecturer_application',(department,'Applicant '+str(n),email or f'applicant{n}@example.invalid',username or 'applicant'+str(n),hash_value,staff),True)
@@ -296,7 +297,7 @@ def main():
         query(c,'USE '+db)
         ok('No approved overlaps remain',scalar(c,"SELECT COUNT(*) FROM BOOKING x JOIN BOOKING y ON x.HallID=y.HallID AND x.BookingDate=y.BookingDate AND x.BookingID<y.BookingID AND x.StartTime<y.EndTime AND x.EndTime>y.StartTime WHERE x.BookingStatus='Approved' AND y.BookingStatus='Approved'")==0)
         report=dict(mysql_version=scalar(c,'SELECT VERSION()'),checks_passed=len(checks),checks=checks,
-          tables=12,columns_count=69,primary_keys=12,foreign_keys_count=16,unique_keys=8,check_constraints=32,views=4,procedures=30,
+          tables=12,columns_count=69,primary_keys=12,foreign_keys_count=16,unique_keys=8,check_constraints=32,views=4,procedures=31,
           concurrency={'approval_races':5,'approval_block_races':3,'lock_wait_checked':True},
           department_preserved=True,**m)
         (REPORT_DIR/'database_validation.json').write_text(json.dumps(report,indent=2,default=str))

@@ -1000,6 +1000,15 @@ BEGIN
  UPDATE USER_ACCOUNT SET IsActive=(p_decision='Approved') WHERE AccountID=v_account;
  COMMIT;
 END$$
+-- Public readiness information only; the definer checks metadata without exposing it.
+DROP PROCEDURE IF EXISTS sp_get_lecturer_registration_status$$
+CREATE PROCEDURE sp_get_lecturer_registration_status()
+SQL SECURITY DEFINER
+BEGIN
+ SELECT ((SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=DATABASE()
+   AND routine_name IN ('sp_register_lecturer_application','sp_list_lecturer_applications','sp_review_lecturer_application'))=3
+   AND EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='LECTURER_APPLICATION')) AS RegistrationEnabled;
+END$$
 -- END LECTURER APPLICATION PROCEDURES
 
 DELIMITER ;
@@ -1185,6 +1194,7 @@ SET SESSION sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,N
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_register_lecturer_application TO 'hallsync_application';
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_list_lecturer_applications TO 'hallsync_application';
 GRANT EXECUTE ON PROCEDURE hallsync_db.sp_review_lecturer_application TO 'hallsync_application';
+GRANT EXECUTE ON PROCEDURE hallsync_db.sp_get_lecturer_registration_status TO 'hallsync_application';
 -- END LECTURER APPLICATION GRANTS
 
 -- SECTION 8: READ-ONLY VERIFICATION

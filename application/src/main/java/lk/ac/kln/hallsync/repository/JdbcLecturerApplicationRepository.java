@@ -21,6 +21,6 @@ public final class JdbcLecturerApplicationRepository implements LecturerApplicat
         db.call("{CALL sp_review_lecturer_application(?,?,?,?,?)}",actor,application,decision,note,identityVerified);
     }
     @Override public boolean installed() throws SQLException {
-        return db.query("SELECT COUNT(*) FROM information_schema.routines WHERE routine_schema=DATABASE() AND routine_name IN ('sp_register_lecturer_application','sp_list_lecturer_applications','sp_review_lecturer_application')",r->r.getInt(1)).get(0)==3;
+        return db.callRows("{CALL sp_get_lecturer_registration_status()}",r->r.getBoolean("RegistrationEnabled")).get(0);
     }
 }
