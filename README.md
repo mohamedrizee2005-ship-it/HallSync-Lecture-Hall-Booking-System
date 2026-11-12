@@ -80,6 +80,8 @@ Lecturer applicants provide their name, email, username, department, staff ID an
 
 In **Lecturer approvals**, an administrator checks university staff records and confirms that the lecturer actually submitted this registration through an independent university channel. A matching name, staff ID or email alone does not establish identity. There is no automatic email verification or notification service in this version. The administrator explicitly confirms verification, then approves. Account activation and the decision commit in one transaction; competing reviews have only one winner.
 
+![Lecturer verification queue](.github/assets/hallsync-lecturer-approvals.webp)
+
 Rejection requires a reason and leaves the account inactive. The reviewer, decision time and note remain in history. Decisions are final in this version; rejected applicants should contact the administrator to resolve corrections. Public resubmission and password recovery are not implemented.
 
 Existing administrator-provisioned lecturers remain valid. An administrator may still provision an already-verified staff account directly through **People**. Administrator accounts require their own username and password; there is no password-free or universal administrator login.
