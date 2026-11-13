@@ -6,33 +6,205 @@ Lecture hall booking and campus space management with a **Java OOP backend, HTML
 
 ## Start or update
 
-Requirements: JDK 17 or later, Maven, MySQL 8.0.46 and MySQL Workbench. Java 21 and 26 are checked in CI. Node.js, Python, XAMPP and a separate web server are not needed to run the downloaded project.
+Choose the guide you need:
 
-1. Download the repository ZIP and **Extract All** into a new folder. Close an older running HallSync first. For an existing database, make a Workbench data export before upgrading.
-2. In your usual MySQL administrator connection, open **`database/HallSync_Setup.sql`**. Enable **Stop Script Execution On Errors**, then execute the entire file with **Ctrl + Shift + Enter**. This is the only setup file for fresh and existing HallSync installations. Existing accounts, password hashes, department IDs, bookings and decisions are retained. Do not drop the database.
-3. For a newly created `hallsync_app` connection account, Workbench returns its **generated password**. Keep it private. An existing account keeps its password. If you retained your old `application/db.local.properties`, copy it into the new `application` folder; otherwise use the connection form in the next step.
-4. Double-click **`run_hallsync.cmd`**. The console stays open and shows build/startup errors. The first Maven build needs internet access. When the browser opens, enter:
+| What do you want to do? | Open this guide |
+| --- | --- |
+| Run HallSync on a laptop for the first time | [First-time setup — Windows](#first-time-setup-windows) |
+| Install a newer GitHub version on the same laptop | [Update an existing installation](#update-an-existing-installation) |
+| Fix a connection or understand which password to use | [Connection help](#connection-help) |
 
-   | Connection field | Value |
-   | --- | --- |
-   | Database address | `jdbc:mysql://127.0.0.1:3306/hallsync_db` |
-   | Connection username | `hallsync_app` |
-   | Connection password | Your private MySQL connection password |
+## First-time setup (Windows)
 
-   Click **Test & connect**. HallSync creates `application/db.local.properties` automatically. Keep the console open while using HallSync.
-5. Sign in using your existing HallSync administrator account. On a fresh installation, expand **Local installation setup → Create administrator** on the sign-in page. Use your local MySQL administrator credentials once to provision your own application administrator. These are separate from the `hallsync_app` connection credentials and are not saved by the initialization form.
-6. Open **Campus manager** to add your actual course units and student groups for Lecture/Tutorial requests. Published-capacity halls are already Active. Enter existing university timetable reservations as bookings before relying on availability. Confirm current seating, equipment and room access locally before a real campus deployment.
+These steps are for Windows 10/11. You need a **Java JDK**, **Apache Maven**, **MySQL Server 8.0.46** and **MySQL Workbench**. Install the tools once on each laptop. If a tool is already installed and works, keep it and continue with the next step.
 
-If you lost only the connection password, run the following once in Workbench as your MySQL administrator, then enter the returned generated password in the connection form:
+HallSync runs a Java backend and opens its interface in your browser. Maven downloads its Java libraries automatically. Node.js, Python, XAMPP and a separate web server are not required to run it. VS Code is optional for editing the code.
+
+### Step 1: Install Java JDK
+
+1. Open the [official Eclipse Temurin downloads](https://adoptium.net/temurin/releases/?version=21&os=windows&arch=x64&package=jdk).
+2. Choose **JDK 21 → Windows → x64 → MSI** for a typical Intel/AMD Windows laptop. Download the JDK, rather than only a Java runtime.
+3. Open the installer. Keep **Add to PATH** enabled and select the option to set **JAVA_HOME**, then finish the installation. The [official Windows installation guide](https://adoptium.net/installation/windows/) shows these options.
+4. Open a **new Command Prompt** and run the following commands, one at a time:
+
+```cmd
+java -version
+javac -version
+```
+
+Both should show a version number. The project requires JDK 17 or later; Java 21 and 26 are checked in CI. If your existing JDK 26 works, you can use it.
+
+### Step 2: Install Apache Maven
+
+1. Open the [official Maven downloads](https://maven.apache.org/download.cgi) and download a stable **Maven 3 Binary zip archive**. Choose the binary ZIP rather than the source ZIP.
+2. Right-click the ZIP → **Extract All**. Move the extracted Maven folder to a permanent location, such as `C:\Tools`.
+3. Open that Maven folder, then open **bin**. Check that it contains `mvn.cmd`. Copy the full folder address from File Explorer. For example, it might be `C:\Tools\apache-maven-3.10.0\bin`; use the actual version you downloaded.
+4. In Windows Search, open **Edit environment variables for your account**. Under **User variables**, select **Path → Edit → New**, paste that bin-folder address, then click **OK** on the open dialogs.
+5. Close Command Prompt, open a new one and run:
+
+```cmd
+mvn -version
+```
+
+You should see the Maven version and the JDK it uses. If Windows says Maven is not recognized, check that the Path entry points to the folder containing `mvn.cmd`, then open a new Command Prompt. See the [official Maven Windows guide](https://maven.apache.org/guides/getting-started/windows-prerequisites.html).
+
+### Step 3: Install MySQL Server and Workbench
+
+**MySQL Server stores the data. MySQL Workbench is the program you use to run the SQL setup. Install both.**
+
+1. Download and open the [official MySQL Installer for Windows](https://dev.mysql.com/downloads/installer/). Use MySQL Server **8.0.46**, the version used by this project.
+2. Choose **Custom** and select **MySQL Server 8.0.46** and **MySQL Workbench**. Follow the installer prompts and install any prerequisites it requests.
+3. During server configuration, keep TCP/IP enabled and the port at **3306**, unless that port is already used. Choose and privately save your MySQL **root password**. This is your **MySQL administrator password**.
+4. Configure MySQL to run as a Windows service and start automatically. Complete the installer.
+5. Open Workbench. Open the local connection created by the installer. If none appears, click **+** beside **MySQL Connections**, enter host `127.0.0.1`, port `3306` and username `root`, then click **Test Connection** and enter the root password you chose.
+6. Open that working connection. You will use it to execute the HallSync SQL file in Step 5.
+
+If you already use MySQL and Workbench successfully, keep that installation and your existing administrator password. Workbench can be closed after setup; the MySQL Server service must remain running.
+
+### Step 4: Download and extract HallSync
+
+1. Open the [HallSync repository](https://github.com/mohamedrizee2005-ship-it/HallSync-Lecture-Hall-Booking-System).
+2. Click **Code → Download ZIP**, or use [Download the latest ZIP](https://github.com/mohamedrizee2005-ship-it/HallSync-Lecture-Hall-Booking-System/archive/refs/heads/main.zip).
+3. Right-click the downloaded ZIP → **Extract All**. Choose a folder on your laptop and finish extracting.
+4. Open the extracted folder until you can see **`run_hallsync.cmd`**, **`application`** and **`database`** together. This is the project root. Run HallSync from here, rather than from inside the ZIP.
+
+Downloading the ZIP gives you the project files. Step 5 creates the database on your own MySQL Server; it does not download someone else's accounts or bookings.
+
+### Step 5: Create the database with the one SQL file
+
+1. In Workbench, open your **MySQL administrator connection** from Step 3.
+2. Choose **File → Open SQL Script** and open **`database/HallSync_Setup.sql`** from the extracted HallSync folder.
+3. Enable **Stop Script Execution On Errors** in the SQL editor toolbar. Clear any text selection, then press **Ctrl + Shift + Enter** to run the whole script.
+4. Check the **Action Output** panel. If execution stops with an error, fix that first. Successful completion returns a result saying **HallSync 3.0 ready**.
+5. When the script creates the `hallsync_app` account for the first time, Workbench also shows its **generated password** in a result grid. Copy it and keep it private. The GRANT/privilege list is not the password. If that password result is missing, use [Connection help](#connection-help).
+6. Refresh the **Schemas** panel. You should see **`hallsync_db`**.
+
+This single file creates the tables, rules, procedures, reference data and application connection account. It also supports upgrades of compatible existing HallSync installations. Keep the supplied SQL file; you do not need to create a separate file for every table or query. Saving an SQL file alone does not execute it.
+
+### Step 6: Run HallSync and save its database connection
+
+1. In the extracted project root, double-click **`run_hallsync.cmd`**.
+2. Keep internet access available while Maven builds the application and downloads any required libraries. Wait for the browser to open, and keep the console window open while using HallSync.
+3. On the connection page, enter:
+
+| Connection field | What to enter |
+| --- | --- |
+| Database address | `jdbc:mysql://127.0.0.1:3306/hallsync_db` |
+| Connection username | `hallsync_app` |
+| Connection password | The private generated password from Step 5 |
+
+4. Click **Test & connect**. HallSync checks the connection and automatically creates **`application/db.local.properties`** on your laptop. The sign-in page then appears.
+
+Use the MySQL host and port from Step 3 if you chose different ones. The connection form uses `hallsync_app`; the root credentials are used only for privileged setup in Workbench and Step 7.
+
+**Keep `db.local.properties` private and keep a backup.** It saves your connection settings for later runs and updates. It is not included in the GitHub ZIP and must never be uploaded to GitHub.
+
+If the browser does not open, use the exact address printed in the console. It is normally `http://127.0.0.1:8080`; HallSync selects a free port if that one is busy. If double-clicking fails, open Command Prompt in the extracted project root and run:
+
+```cmd
+run_hallsync.cmd --console
+```
+
+### Step 7: Create the first HallSync administrator
+
+1. On the sign-in page, expand **Local installation setup → Create administrator**.
+2. Enter your **MySQL admin username** (usually `root`) and the **MySQL admin password** you chose during MySQL installation. These credentials authorize this one-time setup and are not saved by the form.
+3. Enter the administrator's name, email and a HallSync username, such as `project_admin`. Choose a separate **HallSync sign-in password** of 8–128 characters and confirm it.
+4. Click **Create administrator**. Return to sign-in and use the HallSync username and password you just chose.
+
+The generated `hallsync_app` password connects Java to MySQL. Your new `project_admin` password signs you into HallSync. They serve different purposes; see the [password table](#connection-help) if you are unsure.
+
+If this database already has a working HallSync administrator, sign in with that account instead of creating another one.
+
+### Step 8: Prepare the campus and check the three roles
+
+1. As administrator, open **Campus manager**. Add your actual course units and student groups. A Lecture/Tutorial request needs a course unit and at least one group.
+2. Review the supplied halls and add any confirmed local buildings, rooms, capacities and equipment. Published-capacity halls are already Active. Enter existing timetable reservations as bookings before relying on availability.
+3. Sign out. Create a student account or register as a lecturer. The new account waits for administrator approval.
+4. Sign back in as administrator, open **Account approvals**, verify the applicant and approve the registration.
+5. Sign in with the approved account. A student can view halls and schedules. A lecturer can find a hall and submit a booking request; the administrator reviews that request separately.
+
+See [Three roles](#three-roles) and [Request a hall as a lecturer](#request-a-hall-as-a-lecturer) below for the normal workflows.
+
+For later daily use, keep MySQL running, open **`run_hallsync.cmd`** and sign in. Your saved connection settings are reused.
+
+## Update an existing installation
+
+Use this section when HallSync already works on your laptop and a newer version is available in GitHub. Reuse your installed tools, MySQL database and HallSync sign-in account.
+
+### Normal update — keep your local settings
+
+1. **Stop the old HallSync application.** Close its console window, or press **Ctrl + C** in that window. Keep MySQL Server running.
+2. **Save your private settings.** Copy **`application/db.local.properties`** out of the old project folder to a safe private location before replacing or deleting that folder.
+3. **Download the new version.** Use **Code → Download ZIP** or [Download the latest ZIP](https://github.com/mohamedrizee2005-ship-it/HallSync-Lecture-Hall-Booking-System/archive/refs/heads/main.zip). Extract it into a **new folder**.
+4. **Copy the one settings file.** Paste your saved **`db.local.properties`** into the new version's **`application`** folder. Keep that exact filename.
+5. **Check whether the database setup changed.** For a Java/interface-only update, continue to Step 6. If `database/HallSync_Setup.sql` changed, follow [When an update changes the database](#when-an-update-changes-the-database) first. The GitHub commit's changed-file list shows which files changed.
+6. **Start the new version.** Double-click the new folder's **`run_hallsync.cmd`**. It rebuilds the application from the updated code automatically; let the build finish.
+7. **Sign in and check your data.** Your existing accounts and bookings should appear from the same database. Keep the old folder and backups until you confirm the new version works.
+
+The saved file should be in this location:
+
+**New project folder → `application` → `db.local.properties`**
+
+For a normal code update on the same laptop, the private settings file is the only old project file you need to copy. Maven builds a new `target` folder from the new code. Your actual accounts and bookings stay in **MySQL Server**, not in the extracted project folder. Copying `db.local.properties` preserves the connection; it is not a database backup.
+
+An update to **README.md only** changes the instructions. You can read the new instructions on GitHub without reinstalling the application.
+
+### When an update changes the database
+
+1. Stop HallSync. In Workbench, open your MySQL administrator connection and use **Server → Data Export**. Select **`hallsync_db`**, choose **Dump Structure and Data**, export it to a private **Self-Contained File**, and wait for the export to finish. Include stored procedures/functions if that export option is available.
+2. Open the **new version's** **`database/HallSync_Setup.sql`**. Enable **Stop Script Execution On Errors**, then execute the whole file with **Ctrl + Shift + Enter**.
+3. Check for errors before starting HallSync. Supported repeat runs retain existing accounts, password hashes, IDs, bookings and decisions. The existing `hallsync_app` connection password is preserved, so keep using your copied settings file.
+4. Start the new launcher and sign in with your existing HallSync account.
+
+**Keep the existing `hallsync_db` database.** Dropping it would remove your saved records. If the setup reports an incompatible schema, keep the backup and resolve the error before continuing.
+
+### If you deleted the old project folder
+
+If MySQL still has `hallsync_db`, your records may still be there. Extract the new ZIP and run it. If you have a private backup of `db.local.properties`, put it in `application` first. Otherwise, use the connection form with your existing `hallsync_app` password. If that password is lost, follow [Connection help](#connection-help). Sign in with your existing HallSync account after reconnecting.
+
+A different laptop normally has a different MySQL Server. Follow [First-time setup](#first-time-setup-windows) there and use that laptop's own connection credentials. Sharing the repository link shares the code; it does not create a shared live database.
+
+## Connection help
+
+### Which password do I use?
+
+| Password | Where it comes from | Where you use it |
+| --- | --- | --- |
+| **MySQL administrator password** | You chose it when installing/configuring MySQL, usually for `root` | Workbench administrator connection and the one-time **Create administrator** form |
+| **MySQL connection password** | The SQL setup generates it for `hallsync_app` | HallSync **Test & connect**; saved privately in `application/db.local.properties` |
+| **HallSync sign-in password** | You choose it when creating or registering a HallSync account | HallSync sign-in page with your application username |
+
+There is no shared default administrator password in the downloaded project.
+
+### The generated connection password is missing or lost
+
+For an existing `hallsync_app` account, rerunning setup keeps its password and does not generate a new one. Reuse your existing private settings if you have them.
+
+If you need a new connection password, run this once in Workbench using your **MySQL administrator connection**:
 
 ```sql
 ALTER USER 'hallsync_app'@'127.0.0.1'
 IDENTIFIED BY RANDOM PASSWORD;
 ```
 
-This does not reset HallSync application sign-in passwords. Never upload the generated password or `db.local.properties` to GitHub.
+Workbench returns the new generated password in a result grid. Keep it private. Stop HallSync. If `application/db.local.properties` already exists, move it to a private backup location, then restart HallSync and enter the new password in **Test & connect**. HallSync creates a fresh settings file.
 
-If the browser does not open, use the exact address printed in the console. The usual address is `http://127.0.0.1:8080`; a free port is chosen if it is busy. If double-clicking fails, open Command Prompt in the extracted root folder and run `run_hallsync.cmd --console`.
+This changes only the database connection password. Your HallSync sign-in passwords and saved bookings stay the same. Any other HallSync instance using this MySQL account must also use the new connection password.
+
+### Common startup problems
+
+| What you see | What to do |
+| --- | --- |
+| `java` or `javac` is not recognized | Finish [Step 1](#step-1-install-java-jdk), check the JDK PATH setting and open a new Command Prompt. |
+| `mvn` is not recognized | Repeat the bin-folder PATH check in [Step 2](#step-2-install-apache-maven). |
+| The launcher disappears or shows an error | Open Command Prompt in the extracted project root and run `run_hallsync.cmd --console`. Read the error that stays on screen. |
+| The build cannot download libraries | Check your internet connection and run the launcher again. |
+| Saved database settings cannot connect | Start the MySQL Server service and restart HallSync. Check that the saved host, port and connection password match that MySQL Server. If the settings changed, move the private settings file aside and reconnect through the form. |
+| The database username or password is not accepted | Use `hallsync_app` and its generated connection password on the connection page. Check the password table above; use the reset steps only if that connection password is lost. |
+| The browser does not open | Open the exact local address printed in the console. Keep the console open while you use the application. |
+
+Never upload passwords, `db.local.properties` or private database backups to GitHub.
 
 ## Three roles
 
